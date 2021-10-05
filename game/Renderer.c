@@ -13,8 +13,12 @@ int initRenderer()
         return -2;
     }
     glfwMakeContextCurrent(pWindow);
-    glfwPollEvents();
-    glfwSwapBuffers(pWindow);
+    glewExperimental = 1;
+    if(glewInit()!=GLEW_OK){
+        terminateRenderer();
+        return -3;
+    }
+    glClearColor(0, 0, 0, 1);
     glfwSetWindowCloseCallback(pWindow, windowCloseCallback);
     return 0;
 }
@@ -27,9 +31,10 @@ Event loop(){
 }
 Event render(){
     Event event;
-    event.code = 0;
+    glClear(GL_COLOR_BUFFER_BIT);
     glfwSwapBuffers(pWindow);
     glfwPollEvents();
+    event.code = glGetError(); //TODO reset before release
     return event;
 }
 int terminateRenderer(){
