@@ -1,9 +1,8 @@
 #include<Renderer.h>
 GLFWwindow *pWindow;
-EventsStack eventsStack;
+
 int initRenderer()
 {
-    eventsStack = newStack();
     if (!glfwInit())
     {
         return -1;
@@ -16,7 +15,22 @@ int initRenderer()
     glfwMakeContextCurrent(pWindow);
     glfwPollEvents();
     glfwSwapBuffers(pWindow);
+    glfwSetWindowCloseCallback(pWindow, windowCloseCallback);
     return 0;
+}
+Event loop(){
+    Event event = pop(getStack());
+    if(event.code!=-1){
+        return event;
+    }
+    return render();
+}
+Event render(){
+    Event event;
+    event.code = 0;
+    glfwSwapBuffers(pWindow);
+    glfwPollEvents();
+    return event;
 }
 int terminateRenderer(){
     if(pWindow){

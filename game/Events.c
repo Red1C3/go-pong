@@ -1,11 +1,16 @@
-#include<Events.h>
-EventsStack newStack(){
-    EventsStack stack;
-    stack.head = NULL;
-    stack.length = 0;
-    return stack;
+#include <Events.h>
+EventsStack eventsStack;
+void newStack()
+{
+    eventsStack.head = NULL;
+    eventsStack.length = 0;
 }
-void push(EventsStack *stack, Event event){
+EventsStack *getStack()
+{
+    return &eventsStack;
+}
+void push(EventsStack *stack, Event event)
+{
     Event *pEvent = malloc(sizeof(Event));
     pEvent->next = stack->head;
     pEvent->code = event.code;
@@ -13,8 +18,10 @@ void push(EventsStack *stack, Event event){
     stack->head = pEvent;
     stack->length++;
 }
-Event pop(EventsStack *stack){
-    if(stack->length==0){
+Event pop(EventsStack *stack)
+{
+    if (stack->length == 0)
+    {
         Event event;
         event.code = -1;
         return event;
@@ -28,4 +35,10 @@ Event pop(EventsStack *stack){
     free(cur);
     stack->length--;
     return event;
+}
+void windowCloseCallback(GLFWwindow *window)
+{
+    Event event;
+    event.code = 1;
+    push(getStack(), event);
 }

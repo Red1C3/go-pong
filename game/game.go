@@ -6,13 +6,14 @@ import "C"
 import (
 	"log"
 	"net/url"
-	"time"
 )
 
 var isOnline bool
 var isRunning bool
+var closingChannel chan (bool)
 
 func Run(u *url.URL) {
+	closingChannel = make(chan bool, 1)
 	if u != nil {
 		isOnline = true
 	} else {
@@ -24,6 +25,27 @@ func Run(u *url.URL) {
 	if err := C.initRenderer(); err != 0 {
 		log.Fatalf("Failed to init renderer, error code: %v", err)
 	}
-	time.Sleep(time.Second * 4)
+	isRunning = true
+	go eventsHandler()
+	if err := <-closingChannel; !err {
+		log.Fatal("An error occured")
+	}
+	terminate()
+}
+func terminate() {
 	C.terminateRenderer()
+	isRunning = false
+}
+func eventsHandler() {
+	for {
+		event := C.loop()
+		switch event.code {
+		case 0:
+		case 1:
+			closingChannel <- true
+			return
+		default:
+			log.Fatalf("Unknown event code: %v", event.code)
+		}
+	}
 }
