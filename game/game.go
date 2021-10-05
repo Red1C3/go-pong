@@ -10,10 +10,8 @@ import (
 
 var isOnline bool
 var isRunning bool
-var closingChannel chan (bool)
 
 func Run(u *url.URL) {
-	closingChannel = make(chan bool, 1)
 	if u != nil {
 		isOnline = true
 	} else {
@@ -26,26 +24,37 @@ func Run(u *url.URL) {
 		log.Fatalf("Failed to init renderer, error code: %v", err)
 	}
 	isRunning = true
-	go eventsHandler()
-	if err := <-closingChannel; !err {
-		log.Fatal("An error occured")
-	}
+	gameLogic()
 	terminate()
 }
 func terminate() {
 	C.terminateRenderer()
 	isRunning = false
 }
-func eventsHandler() {
+func gameLogic() {
 	for {
-		event := C.loop()
-		switch event.code {
-		case 0:
-		case 1:
-			closingChannel <- true
-			return
-		default:
-			log.Fatalf("Unknown event code: %v", event.code)
+		var dummy C.DrawInfo
+		for loop := true; loop; {
+			switch eventsHandler(dummy) {
+			case 0:
+				loop = false
+			case 1:
+				return
+			default:
+				continue
+			}
 		}
+	}
+}
+func eventsHandler(dI C.DrawInfo) int {
+	event := C.loop(dI)
+	switch event.code {
+	case 0:
+		return 0
+	case 1:
+		return 1
+	default:
+		log.Fatalf("Unknown event code: %v", event.code)
+		return -1
 	}
 }

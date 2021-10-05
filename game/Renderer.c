@@ -22,14 +22,14 @@ int initRenderer()
     glfwSetWindowCloseCallback(pWindow, windowCloseCallback);
     return 0;
 }
-Event loop(){
+Event loop(DrawInfo drawInfo){
     Event event = pop(getStack());
     if(event.code!=-1){
         return event;
     }
-    return render();
+    return render(drawInfo);
 }
-Event render(){
+Event render(DrawInfo drawInfo){
     Event event;
     glClear(GL_COLOR_BUFFER_BIT);
     glfwSwapBuffers(pWindow);
