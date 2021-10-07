@@ -1,6 +1,6 @@
 package game
 
-// #cgo pkg-config: glfw3 glew
+// #cgo pkg-config: glfw3 glew cglm
 // #include<Renderer.h>
 import "C"
 import (
@@ -24,7 +24,9 @@ func Run(u *url.URL) {
 		log.Fatalf("Failed to init renderer, error code: %v", err)
 	}
 	isRunning = true
-	gameLogic()
+	if !isOnline {
+		gameLogic()
+	}
 	terminate()
 }
 func terminate() {

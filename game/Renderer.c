@@ -94,13 +94,40 @@ int initRenderer()
         terminateRenderer();
         return -5;
     }
-    quadVAO = createQuadVAO();
+    float scaleFac = 3.0f;
+    mat4s ortho = glms_ortho((-16.0f / 2.0f) * scaleFac,
+                             (16.0f / 2.0f) * scaleFac,
+                             (-9.0f / 2.0f) * scaleFac,
+                             (9.0f / 2.0f) * scaleFac,
+                             0.9f, 1.1f);
+    mat4s view = glms_lookat((vec3s){.x = 0, .y = 0, .z = 1},
+                             (vec3s){.x = 0, .y = 0, .z = 0},
+                             (vec3s){.x = 0, .y = 1, .z = 0});
+    mat4s VP = glms_mat4_mul(ortho, view);
+    GLint VPLocation = glGetUniformLocation(shaderProgram, "VP");
+    glUniformMatrix4fv(VPLocation, 1, GL_FALSE, &VP.raw);
     if (glGetError() != 0)
     {
         terminateRenderer();
         return -6;
     }
+    quadVAO = createQuadVAO();
+    if (glGetError() != 0)
+    {
+        terminateRenderer();
+        return -7;
+    }
     return 0;
+}
+static inline Event render(DrawInfo *drawInfo)
+{
+    Event event;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glfwSwapBuffers(pWindow);
+    glfwPollEvents();
+    event.code = glGetError(); //TODO reset before release
+    return event;
 }
 Event loop(DrawInfo drawInfo)
 {
@@ -109,16 +136,7 @@ Event loop(DrawInfo drawInfo)
     {
         return event;
     }
-    return render(drawInfo);
-}
-Event render(DrawInfo drawInfo)
-{
-    Event event;
-    glClear(GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers(pWindow);
-    glfwPollEvents();
-    event.code = glGetError(); //TODO reset before release
-    return event;
+    return render(&drawInfo);
 }
 int terminateRenderer()
 {
