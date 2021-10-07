@@ -2,6 +2,9 @@
 GLFWwindow *pWindow;
 GLuint shaderProgram;
 GLuint quadVAO;
+GLint modelMatLocation, ballBoolLocation;
+const int sideOffset = 30;
+const float stickLenScale = 6, stickWidthScale = 0.5f;
 static inline GLuint createShaderProgram()
 {
     FILE *vsFile = fopen("./Shader/shader.vert", "rb");
@@ -94,7 +97,7 @@ int initRenderer()
         terminateRenderer();
         return -5;
     }
-    float scaleFac = 3.0f;
+    float scaleFac = 4.0f;
     mat4s ortho = glms_ortho((-16.0f / 2.0f) * scaleFac,
                              (16.0f / 2.0f) * scaleFac,
                              (-9.0f / 2.0f) * scaleFac,
@@ -106,6 +109,8 @@ int initRenderer()
     mat4s VP = glms_mat4_mul(ortho, view);
     GLint VPLocation = glGetUniformLocation(shaderProgram, "VP");
     glUniformMatrix4fv(VPLocation, 1, GL_FALSE, &VP.raw);
+    modelMatLocation = glGetUniformLocation(shaderProgram, "M");
+    ballBoolLocation = glGetUniformLocation(shaderProgram, "isBall");
     if (glGetError() != 0)
     {
         terminateRenderer();
@@ -123,6 +128,25 @@ static inline Event render(DrawInfo *drawInfo)
 {
     Event event;
     glClear(GL_COLOR_BUFFER_BIT);
+    mat4s model = glms_translate(GLMS_MAT4_IDENTITY,
+                                 (vec3s){.x = drawInfo->ball[0], .y = drawInfo->ball[1]});
+    glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
+    glUniform1i(ballBoolLocation, 1);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glUniform1i(ballBoolLocation, 0);
+    model = glms_translate(GLMS_MAT4_IDENTITY,
+                           (vec3s){.x = sideOffset, .y = drawInfo->p1});
+    model = glms_scale(model,
+                       (vec3s){.x = stickWidthScale, .y = stickLenScale});
+
+    glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    model = glms_translate(GLMS_MAT4_IDENTITY,
+                           (vec3s){.x = -sideOffset, .y = drawInfo->p2});
+    model = glms_scale(model,
+                       (vec3s){.x = stickWidthScale, .y = stickLenScale});
+
+    glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glfwSwapBuffers(pWindow);
     glfwPollEvents();
