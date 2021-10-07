@@ -5,6 +5,25 @@ GLuint quadVAO;
 GLint modelMatLocation, ballBoolLocation;
 const int sideOffset = 30;
 const float stickLenScale = 6, stickWidthScale = 0.5f;
+static inline void handleInput()
+{
+    if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        push(getStack(), (Event){.code = 2, .key = 's'});
+    }
+    if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        push(getStack(), (Event){.code = 2, .key = 'w'});
+    }
+    if (glfwGetKey(pWindow, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        push(getStack(), (Event){.code = 2, .key = 'u'});
+    }
+    if (glfwGetKey(pWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        push(getStack(), (Event){.code = 2, .key = 'd'});
+    }
+}
 static inline GLuint createShaderProgram()
 {
     FILE *vsFile = fopen("./Shader/shader.vert", "rb");
@@ -135,14 +154,14 @@ static inline Event render(DrawInfo *drawInfo)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glUniform1i(ballBoolLocation, 0);
     model = glms_translate(GLMS_MAT4_IDENTITY,
-                           (vec3s){.x = sideOffset, .y = drawInfo->p1});
+                           (vec3s){.x = -sideOffset, .y = drawInfo->p1});
     model = glms_scale(model,
                        (vec3s){.x = stickWidthScale, .y = stickLenScale});
 
     glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     model = glms_translate(GLMS_MAT4_IDENTITY,
-                           (vec3s){.x = -sideOffset, .y = drawInfo->p2});
+                           (vec3s){.x = sideOffset, .y = drawInfo->p2});
     model = glms_scale(model,
                        (vec3s){.x = stickWidthScale, .y = stickLenScale});
 
@@ -160,6 +179,7 @@ Event loop(DrawInfo drawInfo)
     {
         return event;
     }
+    handleInput();
     return render(&drawInfo);
 }
 int terminateRenderer()
