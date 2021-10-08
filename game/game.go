@@ -5,16 +5,26 @@ package game
 import "C"
 import (
 	"log"
+	"math/rand"
 	"net/url"
 	"time"
 )
+
+type line struct {
+	a, b float64
+}
 
 var isOnline bool
 var isRunning bool
 var drawInfo C.DrawInfo
 var deltaTime float64
 var frameBeg time.Time
-var speed = float64(10.0)
+var speed = float64(30.0)
+var gameBall ball
+var players [2]player
+var savedVelocity [2]float64
+var pauseTime time.Time
+var speedGain = 1.01
 
 func Run(u *url.URL) {
 	if u != nil {
@@ -39,35 +49,66 @@ func terminate() {
 	isRunning = false
 }
 func gameLogic() {
-	for {
+	rand.Seed(time.Now().UnixNano())
+	players[0] = newPlayer(-30, 6, 0.5)
+	players[1] = newPlayer(30, 6, 0.5)
+	gameBall = newBall()
+	for isRunning {
 		frameBeg = time.Now()
 		if eventsHandler(drawInfo) == 1 {
 			return
 		}
-		deltaTime = float64(time.Since(frameBeg).Seconds())
 	}
+}
+func updateDrawInfo() {
+	if gameBall.pos[0] > players[0].pos[0] && gameBall.pos[0] < players[1].pos[0] {
+		drawInfo.ball[0] = C.float(gameBall.pos[0])
+		drawInfo.ball[1] = C.float(gameBall.pos[1])
+	} else {
+		drawInfo.ball[0] = -100
+		drawInfo.ball[1] = -100
+	}
+	drawInfo.p1 = C.float(players[0].pos[1])
+	drawInfo.p2 = C.float(players[1].pos[1])
 }
 func eventsHandler(dI C.DrawInfo) int {
 	event := C.loop(dI)
+	if gameBall.velocity[0] == 0 && gameBall.velocity[1] == 0 &&
+		time.Since(pauseTime).Seconds() > 0.5 {
+		gameBall.velocity = savedVelocity
+	}
 	switch event.code {
 	case 0:
+		gameBall.update(deltaTime, players[:])
+		updateDrawInfo()
+		deltaTime = float64(time.Since(frameBeg).Seconds())
 		return 0
 	case 1:
 		return 1
 	case 2:
+
 		switch event.key {
 		case 'w':
-			drawInfo.p1 += C.float(speed * deltaTime)
+			players[0].move(speed, deltaTime)
 		case 's':
-			drawInfo.p1 -= C.float(speed * deltaTime)
+			players[0].move(-speed, deltaTime)
 		case 'u':
-			drawInfo.p2 += C.float(speed * deltaTime)
+			players[1].move(speed, deltaTime)
 		case 'd':
-			drawInfo.p2 -= C.float(speed * deltaTime)
+			players[1].move(-speed, deltaTime)
 		}
 		return 2
 	default:
 		log.Fatalf("Unknown event code: %v", event.code)
 		return -1
 	}
+}
+func reset(i float64) {
+	gameBall.pos = [2]float64{i * 25, 0}
+	gameBall.velocity[0] *= -1 * speedGain
+	savedVelocity = gameBall.velocity
+	gameBall.velocity = [2]float64{0, 0}
+	players[0].pos[1] = 0
+	players[1].pos[1] = 0
+	pauseTime = time.Now()
 }
