@@ -21,7 +21,7 @@ var isRunning bool
 var drawInfo C.DrawInfo
 var deltaTime float64
 var frameBeg time.Time
-var speed = float64(30.0)
+var playerSpeed = float64(30.0)
 var gameBall ball
 var players [2]player
 var savedVelocity [2]float64
@@ -91,13 +91,13 @@ func eventsHandler(dI C.DrawInfo) int {
 
 		switch event.key {
 		case 'w':
-			players[0].move(speed, deltaTime)
+			players[0].move(playerSpeed, deltaTime)
 		case 's':
-			players[0].move(-speed, deltaTime)
+			players[0].move(-playerSpeed, deltaTime)
 		case 'u':
-			players[1].move(speed, deltaTime)
+			players[1].move(playerSpeed, deltaTime)
 		case 'd':
-			players[1].move(-speed, deltaTime)
+			players[1].move(-playerSpeed, deltaTime)
 		}
 		return 2
 	default:
