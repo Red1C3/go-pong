@@ -189,5 +189,7 @@ int terminateRenderer()
         glfwDestroyWindow(pWindow);
     }
     glfwTerminate();
+    while(pop(getStack()).code!=-1)
+        ;
     return 0;
 }

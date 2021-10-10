@@ -12,16 +12,18 @@ type ball struct {
 	radius   float64
 }
 
+var reflectionGain = 1.005
+
 func newBall() ball {
 	b := ball{pos: [2]float64{0, 0}}
-	deg := rand.Float64()*90.0 - 45.0
+	angle := rand.Float64()*90.0 - 45.0
 	if rand.Float32() < 0.5 {
-		deg += 180
+		angle += 180
 	}
-	deg = deg * math.Pi / 180
+	angle = angle * math.Pi / 180
 	intialSpeed := rand.Float64()*25 + 75
-	b.velocity[0] = math.Cos(deg) * intialSpeed
-	b.velocity[1] = math.Sin(deg) * intialSpeed
+	b.velocity[0] = math.Cos(angle) * intialSpeed
+	b.velocity[1] = math.Sin(angle) * intialSpeed
 	b.radius = 0.5
 	return b
 }
@@ -60,46 +62,48 @@ func (b *ball) resolveCollisions(p []player, dt float64) {
 	b.resolvePlayer(p[1], dt)
 }
 func (b *ball) resolvePlayer(p player, dt float64) {
-	var testPoint [2]float64
+	var ballSidePoint [2]float64
 	if p.pos[0] > 0 {
-		testPoint[0] = b.pos[0] + b.radius
+		ballSidePoint[0] = b.pos[0] + b.radius
 	} else {
-		testPoint[0] = b.pos[0] - b.radius
+		ballSidePoint[0] = b.pos[0] - b.radius
 	}
-	testPoint[1] = b.pos[1]
+	ballSidePoint[1] = b.pos[1]
 	var lineA, lineB line
-	point := p.pos
-	if point[0] > 0 {
-		point[0] -= p.width
+	playerEdge := p.pos
+	if playerEdge[0] > 0 {
+		playerEdge[0] -= p.width
 
 	} else {
-		point[0] += p.width
+		playerEdge[0] += p.width
 	}
-	point[1] += p.length
+	playerEdge[1] += p.length
 	if b.velocity[0] != 0 {
 		lineA.a = b.velocity[1] / b.velocity[0]
-		lineA.b = -(lineA.a)*point[0] + point[1]
+		lineA.b = -(lineA.a)*playerEdge[0] + playerEdge[1]
 	} else {
 		lineA.a = 0
-		lineA.b = point[1]
+		lineA.b = playerEdge[1]
 	}
-	point[1] -= 2 * p.length
+	playerEdge[1] -= 2 * p.length
 	if b.velocity[0] != 0 {
 		lineB.a = b.velocity[1] / b.velocity[0]
-		lineB.b = -(lineB.a)*point[0] + point[1]
+		lineB.b = -(lineB.a)*playerEdge[0] + playerEdge[1]
 	} else {
 		lineB.a = 0
-		lineB.b = point[1]
+		lineB.b = playerEdge[1]
 	}
-	bottomPoint := [2]float64{b.pos[0], b.pos[1] - b.radius}
-	topPoint := [2]float64{b.pos[0], b.pos[1] + b.radius}
-	if bottomPoint[1] <= lineA.a*bottomPoint[0]+lineA.b &&
-		topPoint[1] >= lineB.a*topPoint[0]+lineB.b {
-		if point[0] > 0 && testPoint[0] >= point[0] && b.velocity[0] > 0 {
-			b.velocity[0] *= -1
+	ballBottom := [2]float64{b.pos[0], b.pos[1] - b.radius}
+	ballTop := [2]float64{b.pos[0], b.pos[1] + b.radius}
+	if ballBottom[1] <= lineA.a*ballBottom[0]+lineA.b &&
+		ballTop[1] >= lineB.a*ballTop[0]+lineB.b {
+		if playerEdge[0] > 0 && ballSidePoint[0] >= playerEdge[0] && b.velocity[0] > 0 {
+			b.velocity[0] *= -1 * reflectionGain
+			b.velocity[1] *= reflectionGain
 		}
-		if point[0] < 0 && testPoint[0] <= point[0] && b.velocity[0] < 0 {
-			b.velocity[0] *= -1
+		if playerEdge[0] < 0 && ballSidePoint[0] <= playerEdge[0] && b.velocity[0] < 0 {
+			b.velocity[0] *= -1 * reflectionGain
+			b.velocity[1] *= reflectionGain
 		}
 	}
 }
