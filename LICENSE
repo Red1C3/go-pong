@@ -1,4 +1,4 @@
-/*MIT License
+MIT License
 
 Copyright (c) 2021 Mohammad Issawi
 
@@ -19,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*/
-
-#version 330
-layout(location=0) in vec2 pos_model;
-out vec2 out_model;
-uniform mat4 VP;
-uniform mat4 M;
-void main(){
-  out_model=pos_model;
-  gl_Position=VP*M*vec4(pos_model,0,1);
-}
