@@ -44,7 +44,7 @@ type line struct {
 //game constants, change for different difficulty
 const (
 	playerSpeed    = 30.0
-	speedGain      = 1.01
+	scoreGain      = 1.01
 	reflectionGain = 1.005
 	resetTime      = 0.8
 )
@@ -157,8 +157,8 @@ func reset(i float64) {
 		angle += 180
 	}
 	angle = angle * math.Pi / 180
-	savedVelocity[0] = math.Cos(angle) * velocityLength * speedGain
-	savedVelocity[1] = math.Sin(angle) * velocityLength * speedGain
+	savedVelocity[0] = math.Cos(angle) * velocityLength * scoreGain
+	savedVelocity[1] = math.Sin(angle) * velocityLength * scoreGain
 	//pause ball until reset time is passed
 	gameBall.velocity = [2]float64{0, 0}
 	players[0].pos[1] = 0
