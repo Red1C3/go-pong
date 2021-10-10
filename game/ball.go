@@ -12,8 +12,6 @@ type ball struct {
 	radius   float64
 }
 
-var reflectionGain = 1.005
-
 func newBall() ball {
 	b := ball{pos: [2]float64{0, 0}}
 	angle := rand.Float64()*90.0 - 45.0

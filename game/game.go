@@ -16,17 +16,22 @@ type line struct {
 	a, b float64
 }
 
-var isOnline bool
-var isRunning bool
-var drawInfo C.DrawInfo
-var deltaTime float64
-var frameBeg time.Time
-var playerSpeed = float64(30.0)
-var gameBall ball
-var players [2]player
-var savedVelocity [2]float64
-var pauseTime time.Time
-var speedGain = 1.01
+var (
+	playerSpeed    = 30.0
+	speedGain      = 1.01
+	reflectionGain = 1.005
+)
+var (
+	isOnline      bool
+	isRunning     bool
+	drawInfo      C.DrawInfo
+	deltaTime     float64
+	frameBeg      time.Time
+	gameBall      ball
+	players       [2]player
+	savedVelocity [2]float64
+	pauseTime     time.Time
+)
 
 func Run(u *url.URL) {
 	if u != nil {
