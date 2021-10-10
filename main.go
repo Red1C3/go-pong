@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	game.Run(nil)
+	game.Run(nil) //starts the game offline
 }

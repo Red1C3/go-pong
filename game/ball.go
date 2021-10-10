@@ -19,13 +19,16 @@ func newBall() ball {
 		angle += 180
 	}
 	angle = angle * math.Pi / 180
-	intialSpeed := rand.Float64()*25 + 75
+	intialSpeed := rand.Float64()*25 + 75 //intial speed is between 75-100 units
 	b.velocity[0] = math.Cos(angle) * intialSpeed
 	b.velocity[1] = math.Sin(angle) * intialSpeed
-	b.radius = 0.5
+	b.radius = 0.5 //should be the same here and C renderer to avoid wrong behavior
 	return b
 }
+
+//game physics, called every frame
 func (b *ball) update(dt float64, p []player) {
+	//checks if any of the players scored
 	if b.pos[0] < -32 && b.velocity[0] < 0 {
 		reset(-1)
 		p[1].score++
@@ -44,18 +47,21 @@ func (b *ball) update(dt float64, p []player) {
 			isRunning = false
 		}
 	}
+	//calculates new velocity
 	b.pos[0] += dt * b.velocity[0]
 	b.pos[1] += dt * b.velocity[1]
 	b.resolveCollisions(p, dt)
 
 }
 func (b *ball) resolveCollisions(p []player, dt float64) {
+	//checks floor and ceiling collisions
 	if b.pos[1]+b.radius > 18 && b.velocity[1] > 0 {
 		b.velocity[1] *= -1
 	}
 	if b.pos[1]-b.radius < -18 && b.velocity[1] < 0 {
 		b.velocity[1] *= -1
 	}
+	//checks players collision and increases speed if bounced back
 	b.resolvePlayer(p[0], dt)
 	b.resolvePlayer(p[1], dt)
 }
@@ -67,6 +73,9 @@ func (b *ball) resolvePlayer(p player, dt float64) {
 		ballSidePoint[0] = b.pos[0] - b.radius
 	}
 	ballSidePoint[1] = b.pos[1]
+	/*line A and B are determined by the player's edge point and the ball's
+	velocity, in order to determine player reflecting area and
+	prevent false scoring when ball speed is too high*/
 	var lineA, lineB line
 	playerEdge := p.pos
 	if playerEdge[0] > 0 {
@@ -93,6 +102,7 @@ func (b *ball) resolvePlayer(p player, dt float64) {
 	}
 	ballBottom := [2]float64{b.pos[0], b.pos[1] - b.radius}
 	ballTop := [2]float64{b.pos[0], b.pos[1] + b.radius}
+	//checks if ball is inside the player reflecting area
 	if ballBottom[1] <= lineA.a*ballBottom[0]+lineA.b &&
 		ballTop[1] >= lineB.a*ballTop[0]+lineB.b {
 		if playerEdge[0] > 0 && ballSidePoint[0] >= playerEdge[0] && b.velocity[0] > 0 {

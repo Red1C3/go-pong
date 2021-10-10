@@ -24,6 +24,7 @@ static inline void handleInput()
         push(getStack(), (Event){.code = 2, .key = 'd'});
     }
 }
+//loads shaders
 static inline GLuint createShaderProgram()
 {
     FILE *vsFile = fopen("./Shader/shader.vert", "rb");
@@ -58,6 +59,7 @@ static inline GLuint createShaderProgram()
     free(vertexShaderCode);
     return program;
 }
+//creates a single quad VAO to be used for all game objects
 static inline GLuint createQuadVAO()
 {
     GLuint VAO, VBO, EBO;
