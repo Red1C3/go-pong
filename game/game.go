@@ -55,8 +55,8 @@ var (
 	drawInfo      C.DrawInfo
 	deltaTime     float64
 	frameBeg      time.Time
-	gameBall      ball
-	players       [2]player
+	gameBall      Ball
+	players       [2]Player
 	savedVelocity [2]float64
 	pauseTime     time.Time
 )
@@ -86,9 +86,9 @@ func terminate() {
 func gameLogic() {
 	//feeds random
 	rand.Seed(time.Now().UnixNano())
-	players[0] = newPlayer(-30, 6, 0.5)
-	players[1] = newPlayer(30, 6, 0.5)
-	gameBall = newBall()
+	players[0] = NewPlayer(-30, 6, 0.5)
+	players[1] = NewPlayer(30, 6, 0.5)
+	gameBall = NewBall()
 	for isRunning {
 		frameBeg = time.Now()
 		if eventsHandler(drawInfo) == 1 {
@@ -100,28 +100,28 @@ func gameLogic() {
 
 //Updates the structure sent to C code to draw properlys
 func updateDrawInfo() {
-	if gameBall.pos[0] > players[0].pos[0] && gameBall.pos[0] < players[1].pos[0] {
-		drawInfo.ball[0] = C.float(gameBall.pos[0])
-		drawInfo.ball[1] = C.float(gameBall.pos[1])
+	if gameBall.Pos[0] > players[0].Pos[0] && gameBall.Pos[0] < players[1].Pos[0] {
+		drawInfo.ball[0] = C.float(gameBall.Pos[0])
+		drawInfo.ball[1] = C.float(gameBall.Pos[1])
 	} else {
 		drawInfo.ball[0] = -100
 		drawInfo.ball[1] = -100
 	}
-	drawInfo.p1 = C.float(players[0].pos[1])
-	drawInfo.p2 = C.float(players[1].pos[1])
+	drawInfo.p1 = C.float(players[0].Pos[1])
+	drawInfo.p2 = C.float(players[1].Pos[1])
 }
 
 //Handles C events
 func eventsHandler(dI C.DrawInfo) int {
 	event := C.loop(dI)
 	//if resat, wait for (resetTime) seconds before starting...
-	if gameBall.velocity[0] == 0 && gameBall.velocity[1] == 0 &&
+	if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
 		time.Since(pauseTime).Seconds() > resetTime {
-		gameBall.velocity = savedVelocity
+		gameBall.Velocity = savedVelocity
 	}
 	switch event.code {
 	case 0:
-		gameBall.update(deltaTime, players[:])
+		gameBall.Update(deltaTime, players[:], reset)
 		updateDrawInfo()
 		deltaTime = time.Since(frameBeg).Seconds()
 		return 0
@@ -146,22 +146,22 @@ func eventsHandler(dI C.DrawInfo) int {
 	}
 }
 
-//called when a player scores
+//called when a Player scores
 func reset(i float64) {
-	gameBall.pos = [2]float64{i * 25, 0}
-	//create a new velocity vector with the same speed of the current one
+	gameBall.Pos = [2]float64{i * 25, 0}
+	//create a new Velocity vector with the same speed of the current one
 	//but with a different angle
-	velocityLength := math.Sqrt(math.Pow(gameBall.velocity[0], 2) + math.Pow(gameBall.velocity[1], 2))
+	velocityLength := math.Sqrt(math.Pow(gameBall.Velocity[0], 2) + math.Pow(gameBall.Velocity[1], 2))
 	angle := rand.Float64()*120 - 60
-	if gameBall.velocity[0] > 0 {
+	if gameBall.Velocity[0] > 0 {
 		angle += 180
 	}
 	angle = angle * math.Pi / 180
 	savedVelocity[0] = math.Cos(angle) * velocityLength * scoreGain
 	savedVelocity[1] = math.Sin(angle) * velocityLength * scoreGain
-	//pause ball until reset time is passed
-	gameBall.velocity = [2]float64{0, 0}
-	players[0].pos[1] = 0
-	players[1].pos[1] = 0
+	//pause Ball until reset time is passed
+	gameBall.Velocity = [2]float64{0, 0}
+	players[0].Pos[1] = 0
+	players[1].Pos[1] = 0
 	pauseTime = time.Now()
 }

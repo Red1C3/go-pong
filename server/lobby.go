@@ -24,17 +24,17 @@ func (l *lobby) start() {
 		select {
 		case client := <-l.connected:
 			l.clients[client] = true
-			log.Printf("A player has connected with ID %v", client.ID)
+			log.Printf("A Player has connected with ID %v", client.ID)
 			client.connection.WriteMessage(websocket.BinaryMessage, []byte{byte(client.ID)})
-			broadcast(websocket.TextMessage, []byte("A new player connected"))
+			broadcast(websocket.TextMessage, []byte("A new Player connected"))
 			if len(l.clients) == 2 {
 				broadcast(websocket.TextMessage, []byte("Ready"))
-				//start game
+				startGame()
 			}
 		case client := <-l.disconnected:
 			delete(l.clients, client)
-			log.Printf("A player has disconnected with ID %v", client.ID)
-			broadcast(websocket.TextMessage, []byte("A player has disconnected"))
+			log.Printf("A Player has disconnected with ID %v", client.ID)
+			broadcast(websocket.TextMessage, []byte("A Player has disconnected"))
 		}
 	}
 }
