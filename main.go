@@ -25,8 +25,14 @@ package main
 
 import (
 	"go-pong/game"
+	"go-pong/server"
+	"os"
 )
 
 func main() {
-	game.Run(nil) //starts the game offline
+	if len(os.Args) == 1 {
+		game.Run(nil) //starts the game offline
+	} else if os.Args[1] == "-h" {
+		server.Start()
+	}
 }
