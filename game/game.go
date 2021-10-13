@@ -165,3 +165,31 @@ func reset(i float64) {
 	players[1].Pos[1] = 0
 	pauseTime = time.Now()
 }
+
+type CDrawInfo struct {
+	P1, P2 float64
+	Ball   [2]float64
+}
+type CEvent struct {
+	Code int
+	Key  rune
+}
+
+func CInitRenderer() error {
+	if err := C.initRenderer(); err != 0 {
+		return fmt.Errorf("failed to init renderer, error code: %v", err)
+	}
+	return nil
+}
+func CLoop(dI CDrawInfo) CEvent {
+	drawInfo := C.DrawInfo{}
+	drawInfo.p1 = C.float(dI.P1)
+	drawInfo.p2 = C.float(dI.P2)
+	drawInfo.ball[0] = C.float(dI.Ball[0])
+	drawInfo.ball[1] = C.float(dI.Ball[1])
+	event := C.loop(drawInfo)
+	return CEvent{
+		Code: int(event.code),
+		Key:  rune(event.key),
+	}
+}

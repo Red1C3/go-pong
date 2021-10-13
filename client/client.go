@@ -1,6 +1,7 @@
 package client
 
 import (
+	"go-pong/game"
 	"log"
 	"net/url"
 	"os"
@@ -42,7 +43,7 @@ func Start() {
 		}
 	}
 	log.Print("Players connected, starting game...")
-	//start game
+	startGame()
 	closeConnection()
 }
 func closeConnection() {
@@ -54,4 +55,41 @@ func closeConnection() {
 		log.Printf("Failed to close connection %v", err)
 	}
 	client.connection.Close()
+}
+func startGame() {
+	err := game.CInitRenderer()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var drawInfo game.CDrawInfo
+	for {
+		if eventsHandler(drawInfo) == 1 {
+			return
+		}
+	}
+}
+func eventsHandler(dI game.CDrawInfo) int {
+	event := game.CLoop(dI)
+
+	switch event.Code {
+	case 0:
+		updateDrawInfo()
+		return 0
+	case 1:
+		return 1
+	case 2:
+		switch event.Key {
+		case 'u':
+			//players[1].move(playerSpeed, deltaTime)
+		case 'd':
+			//players[1].move(-playerSpeed, deltaTime)
+		}
+		return 2
+	default:
+		log.Fatalf("Unknown event code: %v", event.Code)
+		return -1
+	}
+}
+func updateDrawInfo() {
+
 }
