@@ -2,6 +2,8 @@ package server
 
 import (
 	"log"
+
+	"github.com/gorilla/websocket"
 )
 
 type lobby struct {
@@ -21,9 +23,18 @@ func (l *lobby) start() {
 	for {
 		select {
 		case client := <-l.connected:
-			log.Printf("new player connected with ID %v", client.ID)
+			l.clients[client] = true
+			log.Printf("A player has connected with ID %v", client.ID)
+			client.connection.WriteMessage(websocket.BinaryMessage, []byte{byte(client.ID)})
+			broadcast(websocket.TextMessage, []byte("A new player connected"))
+			if len(l.clients) == 2 {
+				broadcast(websocket.TextMessage, []byte("Ready"))
+				//start game
+			}
 		case client := <-l.disconnected:
-			log.Printf("new player disconnected with ID %v", client.ID)
+			delete(l.clients, client)
+			log.Printf("A player has disconnected with ID %v", client.ID)
+			broadcast(websocket.TextMessage, []byte("A player has disconnected"))
 		}
 	}
 }

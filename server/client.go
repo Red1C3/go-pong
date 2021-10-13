@@ -12,12 +12,14 @@ type client struct {
 }
 
 func (c *client) start() {
+	defer func() {
+		gameLobby.disconnected <- c
+	}()
 	for {
 		msgType, p, err := c.connection.ReadMessage()
 		if err != nil {
 			if ce, ok := err.(*websocket.CloseError); ok {
 				if ce.Code == websocket.CloseNormalClosure {
-					gameLobby.disconnected <- c
 					return
 				}
 			}

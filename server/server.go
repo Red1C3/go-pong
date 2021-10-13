@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var port = os.Args[2]
+var port string
 var upgrader = websocket.Upgrader{
 	WriteBufferSize: 128,
 	ReadBufferSize:  128,
@@ -16,6 +16,7 @@ var upgrader = websocket.Upgrader{
 var gameLobby = newLobby()
 
 func Start() {
+	port = os.Args[2]
 	log.Print("Starting server...")
 	http.HandleFunc("/", requestsHandler)
 	go http.ListenAndServe(":"+port, nil)
@@ -33,4 +34,9 @@ func requestsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	gameLobby.connected <- client
 	client.start()
+}
+func broadcast(msgType int, content []byte) {
+	for client := range gameLobby.clients {
+		client.connection.WriteMessage(msgType, content)
+	}
 }
