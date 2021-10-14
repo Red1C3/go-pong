@@ -25,7 +25,19 @@ func (c *client) start() {
 			}
 			log.Fatalf("error while reading msg from client %v : %v", c.ID, err)
 		}
-		_ = p
-		_ = msgType
+		if msgType == websocket.BinaryMessage && len(p) == 1 {
+			var dir int
+			if p[0] == 0 {
+				dir = -1
+			} else {
+				dir = 1
+			}
+			timeMutex.RLock()
+			playersMutex.Lock()
+			players[c.ID-1].Move(float64(dir)*30*10000, deltaTime)
+			log.Print(deltaTime)
+			playersMutex.Unlock()
+			timeMutex.RUnlock()
+		}
 	}
 }

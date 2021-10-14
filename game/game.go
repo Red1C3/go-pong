@@ -131,13 +131,13 @@ func eventsHandler(dI C.DrawInfo) int {
 		//Handle input
 		switch event.key {
 		case 'w':
-			players[0].move(playerSpeed, deltaTime)
+			players[0].Move(playerSpeed, deltaTime)
 		case 's':
-			players[0].move(-playerSpeed, deltaTime)
+			players[0].Move(-playerSpeed, deltaTime)
 		case 'u':
-			players[1].move(playerSpeed, deltaTime)
+			players[1].Move(playerSpeed, deltaTime)
 		case 'd':
-			players[1].move(-playerSpeed, deltaTime)
+			players[1].Move(-playerSpeed, deltaTime)
 		}
 		return 2
 	default:

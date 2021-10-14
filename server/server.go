@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,6 +22,7 @@ var upgrader = websocket.Upgrader{
 }
 var gameLobby = newLobby()
 var players [2]game.Player
+var playersMutex sync.RWMutex
 var gameBall game.Ball
 var frameBeg time.Time
 var pauseTime time.Time
@@ -28,6 +30,7 @@ var savedVelocity [2]float64
 var deltaTime float64
 var encoder *gob.Encoder
 var buffer bytes.Buffer
+var timeMutex sync.RWMutex
 
 const resetTime = 0.8
 const scoreGain = 1.01
@@ -67,7 +70,9 @@ func startGame() {
 	for {
 		select {
 		case <-ticker.C:
+			playersMutex.RLock()
 			broadcastData()
+			playersMutex.RUnlock()
 		default:
 		}
 		frameBeg = time.Now()
@@ -75,8 +80,12 @@ func startGame() {
 			time.Since(pauseTime).Seconds() > resetTime {
 			gameBall.Velocity = savedVelocity
 		}
+		playersMutex.Lock()
 		gameBall.Update(deltaTime, players[:], reset)
+		playersMutex.Unlock()
+		timeMutex.Lock()
 		deltaTime = time.Since(frameBeg).Seconds()
+		timeMutex.Unlock()
 	}
 }
 func broadcastData() {

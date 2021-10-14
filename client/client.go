@@ -97,9 +97,9 @@ func eventsHandler(dI game.CDrawInfo) int {
 	case 2:
 		switch event.Key {
 		case 'u':
-			//players[1].move(playerSpeed, deltaTime)
+			client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
 		case 'd':
-			//players[1].move(-playerSpeed, deltaTime)
+			client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
 		}
 		return 2
 	default:
