@@ -22,15 +22,13 @@ var upgrader = websocket.Upgrader{
 }
 var gameLobby = newLobby()
 var players [2]game.Player
-var playersMutex sync.RWMutex
+var playersMutex [2]sync.RWMutex
 var gameBall game.Ball
-var frameBeg time.Time
 var pauseTime time.Time
 var savedVelocity [2]float64
 var deltaTime float64
 var encoder *gob.Encoder
 var buffer bytes.Buffer
-var timeMutex sync.RWMutex
 
 const resetTime = 0.8
 const scoreGain = 1.01
@@ -66,26 +64,28 @@ func startGame() {
 	players[0] = game.NewPlayer(-30, 6, 0.5)
 	players[1] = game.NewPlayer(30, 6, 0.5)
 	gameBall = game.NewBall()
-	ticker := time.NewTicker(time.Second / 120)
+	netTicker := time.NewTicker(time.Second / 120)
+	gameTicker := time.NewTicker(time.Second / 80)
+	deltaTime = ((time.Second) / 80).Seconds()
 	for {
 		select {
-		case <-ticker.C:
-			playersMutex.RLock()
+		case <-netTicker.C:
+			playersMutex[0].RLock()
+			playersMutex[1].RLock()
 			broadcastData()
-			playersMutex.RUnlock()
-		default:
+			playersMutex[0].RUnlock()
+			playersMutex[1].RUnlock()
+		case <-gameTicker.C:
+			if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
+				time.Since(pauseTime).Seconds() > resetTime {
+				gameBall.Velocity = savedVelocity
+			}
+			playersMutex[0].Lock()
+			playersMutex[1].Lock()
+			gameBall.Update(deltaTime, players[:], reset)
+			playersMutex[0].Unlock()
+			playersMutex[1].Unlock()
 		}
-		frameBeg = time.Now()
-		if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
-			time.Since(pauseTime).Seconds() > resetTime {
-			gameBall.Velocity = savedVelocity
-		}
-		playersMutex.Lock()
-		gameBall.Update(deltaTime, players[:], reset)
-		playersMutex.Unlock()
-		timeMutex.Lock()
-		deltaTime = time.Since(frameBeg).Seconds()
-		timeMutex.Unlock()
 	}
 }
 func broadcastData() {

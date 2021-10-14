@@ -32,12 +32,9 @@ func (c *client) start() {
 			} else {
 				dir = 1
 			}
-			timeMutex.RLock()
-			playersMutex.Lock()
-			players[c.ID-1].Move(float64(dir)*30*10000, deltaTime)
-			log.Print(deltaTime)
-			playersMutex.Unlock()
-			timeMutex.RUnlock()
+			playersMutex[c.ID-1].Lock()
+			players[c.ID-1].Move(float64(dir)*30, deltaTime)
+			playersMutex[c.ID-1].Unlock()
 		}
 	}
 }
