@@ -1,22 +1,40 @@
 package client
 
 import (
+	"bytes"
+	"encoding/gob"
 	"go-pong/game"
 	"log"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
+type exchangeData struct {
+	mutex                sync.RWMutex
+	P1, P2, BallX, BallY float64
+}
+
+var data exchangeData
 var client struct {
 	ID         int
 	connection *websocket.Conn
 }
+var buffer bytes.Buffer
+var decoder *gob.Decoder
+var drawInfo game.CDrawInfo
 
 func Start() {
 	var err error
+	decoder = gob.NewDecoder(&buffer)
+	drawInfo = game.CDrawInfo{
+		Ball: [2]float64{0, 0},
+		P1:   0,
+		P2:   0,
+	}
 	serverURL := url.URL{Scheme: "ws", Host: os.Args[1], Path: "/"}
 	client.connection, _, err = websocket.DefaultDialer.Dial(serverURL.String(), nil)
 	if err != nil {
@@ -43,6 +61,7 @@ func Start() {
 		}
 	}
 	log.Print("Players connected, starting game...")
+	go msgsHandler()
 	startGame()
 	closeConnection()
 }
@@ -61,8 +80,8 @@ func startGame() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var drawInfo game.CDrawInfo
 	for {
+		updateDrawInfo()
 		if eventsHandler(drawInfo) == 1 {
 			return
 		}
@@ -70,10 +89,8 @@ func startGame() {
 }
 func eventsHandler(dI game.CDrawInfo) int {
 	event := game.CLoop(dI)
-
 	switch event.Code {
 	case 0:
-		updateDrawInfo()
 		return 0
 	case 1:
 		return 1
@@ -90,6 +107,39 @@ func eventsHandler(dI game.CDrawInfo) int {
 		return -1
 	}
 }
+func msgsHandler() {
+	for {
+		msgType, p, err := client.connection.ReadMessage()
+		if err != nil {
+			log.Fatalf("Error occured while reciving a msg %v", err)
+		}
+		if msgType == websocket.BinaryMessage {
+			buffer.Reset()
+			_, err := buffer.Write(p)
+			if err != nil {
+				log.Fatalf("Error while writing to buffer %v", err)
+			}
+			var structure struct {
+				P1, P2, BallX, BallY float64
+			}
+			err = decoder.Decode(&structure)
+			if err != nil {
+				log.Fatalf("Decoder err %v", err)
+			}
+			data.mutex.Lock()
+			data.P1 = structure.P1
+			data.P2 = structure.P2
+			data.BallX = structure.BallX
+			data.BallY = structure.BallY
+			data.mutex.Unlock()
+		}
+	}
+}
 func updateDrawInfo() {
-
+	data.mutex.RLock()
+	defer data.mutex.RUnlock()
+	drawInfo.P1 = data.P1
+	drawInfo.P2 = data.P2
+	drawInfo.Ball[0] = data.BallX
+	drawInfo.Ball[1] = data.BallY
 }

@@ -182,7 +182,6 @@ func CInitRenderer() error {
 	return nil
 }
 func CLoop(dI CDrawInfo) CEvent {
-	drawInfo := C.DrawInfo{}
 	drawInfo.p1 = C.float(dI.P1)
 	drawInfo.p2 = C.float(dI.P2)
 	drawInfo.ball[0] = C.float(dI.Ball[0])

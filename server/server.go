@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/gob"
 	"go-pong/game"
 	"log"
 	"math"
@@ -24,6 +26,8 @@ var frameBeg time.Time
 var pauseTime time.Time
 var savedVelocity [2]float64
 var deltaTime float64
+var encoder *gob.Encoder
+var buffer bytes.Buffer
 
 const resetTime = 0.8
 const scoreGain = 1.01
@@ -33,6 +37,7 @@ func Start() {
 	log.Print("Starting server...")
 	http.HandleFunc("/", requestsHandler)
 	go http.ListenAndServe(":"+port, nil)
+	encoder = gob.NewEncoder(&buffer)
 	log.Print("Waiting for players...")
 	gameLobby.start()
 }
@@ -58,7 +63,13 @@ func startGame() {
 	players[0] = game.NewPlayer(-30, 6, 0.5)
 	players[1] = game.NewPlayer(30, 6, 0.5)
 	gameBall = game.NewBall()
+	ticker := time.NewTicker(time.Second / 120)
 	for {
+		select {
+		case <-ticker.C:
+			broadcastData()
+		default:
+		}
 		frameBeg = time.Now()
 		if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
 			time.Since(pauseTime).Seconds() > resetTime {
@@ -68,7 +79,21 @@ func startGame() {
 		deltaTime = time.Since(frameBeg).Seconds()
 	}
 }
-
+func broadcastData() {
+	var structure struct {
+		P1, P2, BallX, BallY float64
+	}
+	structure.P1 = players[0].Pos[1]
+	structure.P2 = players[1].Pos[1]
+	structure.BallX = gameBall.Pos[0]
+	structure.BallY = gameBall.Pos[1]
+	buffer.Reset()
+	err := encoder.Encode(structure)
+	if err != nil {
+		log.Fatal(err)
+	}
+	broadcast(websocket.BinaryMessage, buffer.Bytes())
+}
 func reset(i float64) {
 	gameBall.Pos = [2]float64{i * 25, 0}
 	//create a new Velocity vector with the same speed of the current one
