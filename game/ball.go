@@ -53,19 +53,19 @@ func NewBall() Ball {
 func (b *Ball) Update(dt float64, p []Player, resetFun func(i float64)) {
 	//checks if any of the players scored
 	if b.Pos[0] < -32 && b.Velocity[0] < 0 {
+		p[1].Score++
 		resetFun(-1)
-		p[1].score++
-		log.Printf("%v : %v", p[0].score, p[1].score)
-		if p[1].score > 9 {
+		log.Printf("%v : %v", p[0].Score, p[1].Score)
+		if p[1].Score > 9 {
 			log.Print("Player Right Won !")
 			isRunning = false
 		}
 	}
 	if b.Pos[0] > 32 && b.Velocity[0] > 0 {
+		p[0].Score++
 		resetFun(1)
-		p[0].score++
-		log.Printf("%v : %v", p[0].score, p[1].score)
-		if p[0].score > 9 {
+		log.Printf("%v : %v", p[0].Score, p[1].Score)
+		if p[0].Score > 9 {
 			log.Print("Player Left Won !")
 			isRunning = false
 		}

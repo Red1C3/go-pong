@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"go-pong/game"
 	"log"
 	"math"
@@ -120,4 +121,11 @@ func reset(i float64) {
 	players[0].Pos[1] = 0
 	players[1].Pos[1] = 0
 	pauseTime = time.Now()
+	broadcast(websocket.TextMessage, []byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
+	if players[0].Score > 9 {
+		broadcast(websocket.TextMessage, []byte("Player right won !"))
+	}
+	if players[1].Score > 9 {
+		broadcast(websocket.TextMessage, []byte("Player left won !"))
+	}
 }

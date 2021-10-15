@@ -133,6 +133,9 @@ func msgsHandler() {
 			data.BallY = structure.BallY
 			data.mutex.Unlock()
 		}
+		if msgType == websocket.TextMessage {
+			log.Print(string(p))
+		}
 	}
 }
 func updateDrawInfo() {
