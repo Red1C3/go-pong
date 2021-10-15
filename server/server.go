@@ -142,11 +142,11 @@ func reset(i float64) {
 	pauseTime = time.Now()
 	broadcast(websocket.TextMessage, []byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
 	if players[0].Score > 9 {
-		broadcast(websocket.TextMessage, []byte("Player right won !"))
+		broadcast(websocket.TextMessage, []byte("Player left won !"))
 		closeChannel <- true
 	}
 	if players[1].Score > 9 {
-		broadcast(websocket.TextMessage, []byte("Player left won !"))
+		broadcast(websocket.TextMessage, []byte("Player right won !"))
 		closeChannel <- true
 	}
 }

@@ -16,12 +16,6 @@ func (c *client) start() {
 	for {
 		msgType, p, err := c.connection.ReadMessage()
 		if err != nil {
-			/*if ce, ok := err.(*websocket.CloseError); ok {
-				if ce.Code == websocket.CloseNormalClosure {
-					return
-				}
-			}
-			log.Fatalf("error while reading msg from client %v : %v", c.ID, err)*/
 			return
 		}
 		if msgType == websocket.BinaryMessage && len(p) == 1 {

@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//structure used for server recieving
 type exchangeData struct {
 	mutex                sync.RWMutex
 	P1, P2, BallX, BallY float64
@@ -24,6 +25,8 @@ var client struct {
 	connection *websocket.Conn
 }
 var buffer bytes.Buffer
+
+//decodes received data
 var decoder *gob.Decoder
 var drawInfo game.CDrawInfo
 var closeChannel = make(chan bool)
