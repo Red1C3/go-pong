@@ -38,24 +38,23 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var port string
-var upgrader = websocket.Upgrader{
-	WriteBufferSize: 128,
-	ReadBufferSize:  128,
-}
-var gameLobby = newLobby()
-var players [2]game.Player
-var playersMutex [2]sync.RWMutex
-var gameBall game.Ball
-var pauseTime time.Time
-var savedVelocity [2]float64
-var deltaTime float64
-var encoder *gob.Encoder
-var buffer bytes.Buffer
-var closeChannel = make(chan bool, 1)
-
-const resetTime = 0.8
-const scoreGain = 1.01
+var (
+	port     string
+	upgrader = websocket.Upgrader{
+		WriteBufferSize: 128,
+		ReadBufferSize:  128,
+	}
+	gameLobby     = newLobby()
+	players       [2]game.Player
+	playersMutex  [2]sync.RWMutex
+	gameBall      game.Ball
+	pauseTime     time.Time
+	savedVelocity [2]float64
+	deltaTime     float64
+	encoder       *gob.Encoder
+	buffer        bytes.Buffer
+	closeChannel  = make(chan bool, 1)
+)
 
 func Start() {
 	port = os.Args[2]
@@ -107,7 +106,7 @@ func startGame() {
 			playersMutex[1].RUnlock()
 		case <-gameTicker.C:
 			if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
-				time.Since(pauseTime).Seconds() > resetTime {
+				time.Since(pauseTime).Seconds() > game.ResetTime {
 				gameBall.Velocity = savedVelocity
 			}
 			playersMutex[0].Lock()
@@ -155,8 +154,8 @@ func reset(i float64) {
 		angle += 180
 	}
 	angle = angle * math.Pi / 180
-	savedVelocity[0] = math.Cos(angle) * velocityLength * scoreGain
-	savedVelocity[1] = math.Sin(angle) * velocityLength * scoreGain
+	savedVelocity[0] = math.Cos(angle) * velocityLength * game.ScoreGain
+	savedVelocity[1] = math.Sin(angle) * velocityLength * game.ScoreGain
 	//pause Ball until reset time is passed
 	gameBall.Velocity = [2]float64{0, 0}
 	players[0].Pos[1] = 0

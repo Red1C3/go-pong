@@ -44,9 +44,9 @@ type line struct {
 //game constants, change for different difficulty
 const (
 	playerSpeed    = 30.0
-	scoreGain      = 1.01
+	ScoreGain      = 1.01
 	reflectionGain = 1.005
-	resetTime      = 0.8
+	ResetTime      = 0.8
 )
 
 var (
@@ -113,9 +113,9 @@ func updateDrawInfo() {
 //Handles C events
 func eventsHandler(dI C.DrawInfo) int {
 	event := C.loop(dI)
-	//if resat, wait for (resetTime) seconds before starting...
+	//if resat, wait for (ResetTime) seconds before starting...
 	if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
-		time.Since(pauseTime).Seconds() > resetTime {
+		time.Since(pauseTime).Seconds() > ResetTime {
 		gameBall.Velocity = savedVelocity
 	}
 	switch event.code {
@@ -156,8 +156,8 @@ func reset(i float64) {
 		angle += 180
 	}
 	angle = angle * math.Pi / 180
-	savedVelocity[0] = math.Cos(angle) * velocityLength * scoreGain
-	savedVelocity[1] = math.Sin(angle) * velocityLength * scoreGain
+	savedVelocity[0] = math.Cos(angle) * velocityLength * ScoreGain
+	savedVelocity[1] = math.Sin(angle) * velocityLength * ScoreGain
 	//pause Ball until reset time is passed
 	gameBall.Velocity = [2]float64{0, 0}
 	players[0].Pos[1] = 0

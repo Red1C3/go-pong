@@ -41,17 +41,19 @@ type exchangeData struct {
 	P1, P2, BallX, BallY float64
 }
 
-var data exchangeData
-var client struct {
-	ID         int
-	connection *websocket.Conn
-}
-var buffer bytes.Buffer
+var (
+	data   exchangeData
+	client struct {
+		ID         int
+		connection *websocket.Conn
+	}
+	buffer bytes.Buffer
 
-//decodes received data
-var decoder *gob.Decoder
-var drawInfo game.CDrawInfo
-var closeChannel = make(chan bool)
+	//decodes received data
+	decoder      *gob.Decoder
+	drawInfo     game.CDrawInfo
+	closeChannel = make(chan bool)
+)
 
 func Start() {
 	var err error

@@ -35,9 +35,9 @@ func main() {
 	if len(os.Args) == 1 {
 		game.Run(nil) //starts the game offline
 	} else if os.Args[1] == "-h" {
-		server.Start()
+		server.Start() //starts host
 	} else if len(os.Args) == 2 {
-		client.Start()
+		client.Start() //starts client
 	}
 	fmt.Println("Created with fuzzy kittens, with the help of RedDeadAlice")
 }
