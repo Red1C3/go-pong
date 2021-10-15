@@ -111,7 +111,13 @@ func msgsHandler() {
 	for {
 		msgType, p, err := client.connection.ReadMessage()
 		if err != nil {
-			log.Fatalf("Error occured while reciving a msg %v", err)
+			if ce, ok := err.(*websocket.CloseError); ok {
+				if ce.Code == websocket.CloseNormalClosure {
+					log.Print("Connection closed from server")
+					return
+				}
+			}
+			log.Fatalf("error while reading msg from client %v : %v", client.ID, err)
 		}
 		if msgType == websocket.BinaryMessage {
 			buffer.Reset()

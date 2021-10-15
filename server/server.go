@@ -30,6 +30,7 @@ var savedVelocity [2]float64
 var deltaTime float64
 var encoder *gob.Encoder
 var buffer bytes.Buffer
+var closeChannel = make(chan bool, 1)
 
 const resetTime = 0.8
 const scoreGain = 1.01
@@ -39,7 +40,6 @@ func Start() {
 	log.Print("Starting server...")
 	http.HandleFunc("/", requestsHandler)
 	go http.ListenAndServe(":"+port, nil)
-	encoder = gob.NewEncoder(&buffer)
 	log.Print("Waiting for players...")
 	gameLobby.start()
 }
@@ -61,6 +61,7 @@ func broadcast(msgType int, content []byte) {
 	}
 }
 func startGame() {
+	encoder = gob.NewEncoder(&buffer)
 	rand.Seed(time.Now().UnixNano())
 	players[0] = game.NewPlayer(-30, 6, 0.5)
 	players[1] = game.NewPlayer(30, 6, 0.5)
@@ -68,8 +69,10 @@ func startGame() {
 	netTicker := time.NewTicker(time.Second / 120)
 	gameTicker := time.NewTicker(time.Second / 80)
 	deltaTime = ((time.Second) / 80).Seconds()
-	for {
+	for close := false; !close; {
 		select {
+		case <-closeChannel:
+			close = true
 		case <-netTicker.C:
 			playersMutex[0].RLock()
 			playersMutex[1].RLock()
@@ -87,6 +90,16 @@ func startGame() {
 			playersMutex[0].Unlock()
 			playersMutex[1].Unlock()
 		}
+	}
+	for client := range gameLobby.clients {
+		log.Print("Closing connection...")
+		err := client.connection.WriteControl(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			time.Now().Add(time.Second))
+		if err != nil {
+			log.Printf("Failed to close connection %v", err)
+		}
+		client.connection.Close()
 	}
 }
 func broadcastData() {
@@ -124,8 +137,10 @@ func reset(i float64) {
 	broadcast(websocket.TextMessage, []byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
 	if players[0].Score > 9 {
 		broadcast(websocket.TextMessage, []byte("Player right won !"))
+		closeChannel <- true
 	}
 	if players[1].Score > 9 {
 		broadcast(websocket.TextMessage, []byte("Player left won !"))
+		closeChannel <- true
 	}
 }
