@@ -44,6 +44,9 @@ func Start() {
 	gameLobby.start()
 }
 func requestsHandler(w http.ResponseWriter, r *http.Request) {
+	if len(gameLobby.clients) == 2 {
+		return
+	}
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("Failed to connect to a client %v", err)
@@ -61,6 +64,7 @@ func broadcast(msgType int, content []byte) {
 	}
 }
 func startGame() {
+	time.Sleep(time.Second * 3)
 	encoder = gob.NewEncoder(&buffer)
 	rand.Seed(time.Now().UnixNano())
 	players[0] = game.NewPlayer(-30, 6, 0.5)
@@ -97,7 +101,9 @@ func startGame() {
 			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
 			time.Now().Add(time.Second))
 		if err != nil {
-			log.Printf("Failed to close connection %v", err)
+			if err != websocket.ErrCloseSent {
+				log.Printf("Failed to close connection %v", err)
+			}
 		}
 		client.connection.Close()
 	}

@@ -39,6 +39,10 @@ func Start() {
 	serverURL := url.URL{Scheme: "ws", Host: os.Args[1], Path: "/"}
 	client.connection, _, err = websocket.DefaultDialer.Dial(serverURL.String(), nil)
 	if err != nil {
+		if err == websocket.ErrBadHandshake {
+			log.Print("Game is already in progress")
+			return
+		}
 		log.Fatal(err)
 	}
 	_, p, err := client.connection.ReadMessage()
@@ -53,12 +57,12 @@ func Start() {
 		if err != nil {
 			log.Printf("Failed to read msg from server %v", err)
 			closeConnection()
+			return
 		}
 		if msgType == websocket.TextMessage {
 			if string(p) == "Ready" {
 				break
 			}
-			log.Print(string(p))
 		}
 	}
 	log.Print("Players connected, starting game...")
@@ -72,7 +76,9 @@ func closeConnection() {
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
 		time.Now().Add(time.Second))
 	if err != nil {
-		log.Printf("Failed to close connection %v", err)
+		if err != websocket.ErrCloseSent {
+			log.Printf("Failed to close connection %v", err)
+		}
 	}
 	client.connection.Close()
 }
