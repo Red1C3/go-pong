@@ -7,8 +7,12 @@ Key bindings are 'w' and 's' for the left player and 'up arrow' and 'down arrow'
 go-pong supports multiplayer by hosting a game and joining it, hosting can be performed by running ```./go-pong -h <port> ``` , and connecting to that host can be performed by running ```./go-pong <ip:address:port> ``` , control your player with up and down arrows.
 ## Building
 After installing the required dependencies, run ```go build```, make sure your executable is in the same folder than contains the *Shader* folder.
+### Dependencies:
+- [cglm](https://github.com/recp/cglm)
+- [glew](http://glew.sourceforge.net/)
+- [glfw](https://glfw.org/)
 ## Roadmap
-Also a real score board might be added in the future.
+A real score board might be added in the future.
 ## Contributions
 Are welcome !
 ## License

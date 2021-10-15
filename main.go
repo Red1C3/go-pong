@@ -24,6 +24,7 @@ SOFTWARE.
 package main
 
 import (
+	"fmt"
 	"go-pong/client"
 	"go-pong/game"
 	"go-pong/server"
@@ -38,4 +39,5 @@ func main() {
 	} else if len(os.Args) == 2 {
 		client.Start()
 	}
+	fmt.Println("Created with fuzzy kittens, with the help of RedDeadAlice")
 }

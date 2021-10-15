@@ -78,7 +78,6 @@ func Run(u *url.URL) {
 		gameLogic()
 	}
 	terminate()
-	fmt.Println("Created with fuzzy kittens, with the help of RedDeadAlice")
 }
 func terminate() {
 	C.terminateRenderer()
