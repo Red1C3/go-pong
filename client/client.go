@@ -26,6 +26,7 @@ var client struct {
 var buffer bytes.Buffer
 var decoder *gob.Decoder
 var drawInfo game.CDrawInfo
+var closeChannel = make(chan bool)
 
 func Start() {
 	var err error
@@ -80,7 +81,12 @@ func startGame() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for {
+	for close := false; !close; {
+		select {
+		case <-closeChannel:
+			close = true
+		default:
+		}
 		updateDrawInfo()
 		if eventsHandler(drawInfo) == 1 {
 			return
@@ -114,6 +120,7 @@ func msgsHandler() {
 			if ce, ok := err.(*websocket.CloseError); ok {
 				if ce.Code == websocket.CloseNormalClosure {
 					log.Print("Connection closed from server")
+					closeChannel <- true
 					return
 				}
 			}
