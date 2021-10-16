@@ -24,7 +24,7 @@ SOFTWARE.
 package game
 
 import (
-	"log"
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -55,18 +55,18 @@ func (b *Ball) Update(dt float64, p []Player, resetFun func(i float64)) {
 	if b.Pos[0] < -32 && b.Velocity[0] < 0 {
 		p[1].Score++
 		resetFun(-1)
-		log.Printf("%v : %v", p[0].Score, p[1].Score)
+		fmt.Printf("%v : %v \n", p[0].Score, p[1].Score)
 		if p[1].Score > 9 {
-			log.Print("Player Right Won !")
+			fmt.Println("Player Right Won !")
 			isRunning = false
 		}
 	}
 	if b.Pos[0] > 32 && b.Velocity[0] > 0 {
 		p[0].Score++
 		resetFun(1)
-		log.Printf("%v : %v", p[0].Score, p[1].Score)
+		fmt.Printf("%v : %v \n", p[0].Score, p[1].Score)
 		if p[0].Score > 9 {
-			log.Print("Player Left Won !")
+			fmt.Println("Player Left Won !")
 			isRunning = false
 		}
 	}

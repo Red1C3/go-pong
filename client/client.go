@@ -25,6 +25,7 @@ package client
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"go-pong/game"
 	"log"
 	"net/url"
@@ -68,7 +69,7 @@ func Start() {
 	client.connection, _, err = websocket.DefaultDialer.Dial(serverURL.String(), nil)
 	if err != nil {
 		if err == websocket.ErrBadHandshake {
-			log.Print("Game is already in progress")
+			fmt.Println("Game is already in progress")
 			return
 		}
 		log.Fatal(err)
@@ -78,12 +79,12 @@ func Start() {
 		log.Fatal(err)
 	}
 	client.ID = int(p[0])
-	log.Printf("Connected as Player %v", client.ID)
-	log.Print("Waiting for other players to join")
+	fmt.Printf("Connected as Player %v \n", client.ID)
+	fmt.Println("Waiting for other players to join")
 	for {
 		msgType, p, err := client.connection.ReadMessage()
 		if err != nil {
-			log.Printf("Failed to read msg from server %v", err)
+			fmt.Printf("Failed to read msg from server %v", err)
 			closeConnection()
 			return
 		}
@@ -93,20 +94,20 @@ func Start() {
 			}
 		}
 	}
-	log.Print("Players connected, starting game...")
+	fmt.Println("Players connected, starting game...")
 	go msgsHandler()
 	startGame()
 	closeConnection()
 	game.Terminate()
 }
 func closeConnection() {
-	log.Print("Closing connection...")
+	fmt.Println("Closing connection...")
 	err := client.connection.WriteControl(websocket.CloseMessage,
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
 		time.Now().Add(time.Second))
 	if err != nil {
 		if err != websocket.ErrCloseSent {
-			log.Printf("Failed to close connection %v", err)
+			fmt.Printf("Failed to close connection %v \n", err)
 		}
 	}
 	client.connection.Close()
@@ -159,7 +160,7 @@ func msgsHandler() {
 		if err != nil {
 			if ce, ok := err.(*websocket.CloseError); ok {
 				if ce.Code == websocket.CloseNormalClosure {
-					log.Print("Connection closed from server")
+					fmt.Println("Connection closed from server")
 					closeChannel <- true
 					return
 				}
@@ -187,7 +188,7 @@ func msgsHandler() {
 			data.mutex.Unlock()
 		}
 		if msgType == websocket.TextMessage {
-			log.Print(string(p))
+			fmt.Println(string(p))
 		}
 	}
 }
