@@ -33,7 +33,7 @@ import (
 
 func main() {
 	if len(os.Args) == 1 {
-		game.Run(nil) //starts the game offline
+		game.Run() //starts the game offline
 	} else if os.Args[1] == "-h" {
 		server.Start() //starts host
 	} else if len(os.Args) == 2 {

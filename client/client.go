@@ -96,6 +96,7 @@ func Start() {
 	go msgsHandler()
 	startGame()
 	closeConnection()
+	game.Terminate()
 }
 func closeConnection() {
 	log.Print("Closing connection...")

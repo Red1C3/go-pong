@@ -32,7 +32,6 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"net/url"
 	"time"
 )
 
@@ -50,7 +49,6 @@ const (
 )
 
 var (
-	isOnline      bool
 	isRunning     bool
 	drawInfo      C.DrawInfo
 	deltaTime     float64
@@ -61,25 +59,15 @@ var (
 	pauseTime     time.Time
 )
 
-func Run(u *url.URL) {
-	if u != nil {
-		isOnline = true
-	} else {
-		isOnline = false
-	}
-	if isOnline {
-		log.Fatal("Not implemented yet")
-	}
+func Run() {
 	if err := C.initRenderer(); err != 0 {
 		log.Fatalf("Failed to init renderer, error code: %v", err)
 	}
 	isRunning = true
-	if !isOnline {
-		gameLogic()
-	}
-	terminate()
+	gameLogic()
+	Terminate()
 }
-func terminate() {
+func Terminate() {
 	C.terminateRenderer()
 }
 func gameLogic() {
