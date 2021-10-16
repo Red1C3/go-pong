@@ -53,6 +53,7 @@ var (
 	decoder      *gob.Decoder
 	drawInfo     game.CDrawInfo
 	closeChannel = make(chan bool)
+	netTicker    *time.Ticker
 )
 
 func Start() {
@@ -115,6 +116,7 @@ func startGame() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	netTicker = time.NewTicker(time.Second / 120)
 	for close := false; !close; {
 		select {
 		case <-closeChannel:
@@ -135,11 +137,15 @@ func eventsHandler(dI game.CDrawInfo) int {
 	case 1:
 		return 1
 	case 2:
-		switch event.Key {
-		case 'u':
-			client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
-		case 'd':
-			client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
+		select {
+		case <-netTicker.C:
+			switch event.Key {
+			case 'u':
+				client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
+			case 'd':
+				client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
+			}
+		default:
 		}
 		return 2
 	default:
