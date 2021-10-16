@@ -60,7 +60,7 @@ var (
 )
 
 func Run() {
-	if err := C.initRenderer(); err != 0 {
+	if err := C.initRenderer(false); err != 0 {
 		log.Fatalf("Failed to init renderer, error code: %v", err)
 	}
 	isRunning = true
@@ -163,7 +163,7 @@ type CEvent struct {
 }
 
 func CInitRenderer() error {
-	if err := C.initRenderer(); err != 0 {
+	if err := C.initRenderer(true); err != 0 {
 		return fmt.Errorf("failed to init renderer, error code: %v", err)
 	}
 	return nil

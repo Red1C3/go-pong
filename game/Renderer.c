@@ -27,12 +27,14 @@ GLuint shaderProgram;
 GLuint quadVAO;
 GLint modelMatLocation, ballBoolLocation;
 bool canSend = true;
+bool isOnline;
 double sendTime;
 const int sideOffset = 30;
 const float stickLenScale = 6, stickWidthScale = 0.5f;
 static inline void handleInput()
 {
-    if(!canSend){
+    if (isOnline && !canSend)
+    {
         return;
     }
     if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
@@ -51,8 +53,11 @@ static inline void handleInput()
     {
         push(getStack(), (Event){.code = 2, .key = 'd'});
     }
-    canSend = false;
-    sendTime = glfwGetTime();
+    if (isOnline)
+    {
+        canSend = false;
+        sendTime = glfwGetTime();
+    }
 }
 //loads shaders
 static inline GLuint createShaderProgram()
@@ -111,8 +116,9 @@ static inline GLuint createQuadVAO()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
     return VAO;
 }
-int initRenderer()
+int initRenderer(bool online)
 {
+    isOnline = online;
     if (!glfwInit())
     {
         return -1;
@@ -206,7 +212,8 @@ static inline Event render(DrawInfo *drawInfo)
 }
 Event loop(DrawInfo drawInfo)
 {
-    if(!canSend&&glfwGetTime()-sendTime>=1.0/120.0){
+    if (isOnline && !canSend && glfwGetTime() - sendTime >= 1.0 / 120.0)
+    {
         canSend = true;
     }
     Event event = pop(getStack());
@@ -224,7 +231,7 @@ int terminateRenderer()
         glfwDestroyWindow(pWindow);
     }
     glfwTerminate();
-    while(pop(getStack()).code!=-1)
+    while (pop(getStack()).code != -1)
         ;
     return 0;
 }

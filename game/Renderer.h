@@ -32,7 +32,7 @@ typedef struct{
     float p1, p2;
     float ball[2];
 } DrawInfo;
-int initRenderer();
+int initRenderer(bool online);
 Event loop(DrawInfo drawInfo);
 int terminateRenderer();
 #endif
