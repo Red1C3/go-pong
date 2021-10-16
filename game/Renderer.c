@@ -26,10 +26,15 @@ GLFWwindow *pWindow;
 GLuint shaderProgram;
 GLuint quadVAO;
 GLint modelMatLocation, ballBoolLocation;
+bool canSend = true;
+double sendTime;
 const int sideOffset = 30;
 const float stickLenScale = 6, stickWidthScale = 0.5f;
 static inline void handleInput()
 {
+    if(!canSend){
+        return;
+    }
     if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
     {
         push(getStack(), (Event){.code = 2, .key = 's'});
@@ -46,6 +51,8 @@ static inline void handleInput()
     {
         push(getStack(), (Event){.code = 2, .key = 'd'});
     }
+    canSend = false;
+    sendTime = glfwGetTime();
 }
 //loads shaders
 static inline GLuint createShaderProgram()
@@ -199,6 +206,9 @@ static inline Event render(DrawInfo *drawInfo)
 }
 Event loop(DrawInfo drawInfo)
 {
+    if(!canSend&&glfwGetTime()-sendTime>=1.0/120.0){
+        canSend = true;
+    }
     Event event = pop(getStack());
     if (event.code != -1)
     {
