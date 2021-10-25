@@ -26,6 +26,7 @@ GLFWwindow *pWindow;
 GLuint shaderProgram;
 GLuint quadVAO;
 GLint modelMatLocation, ballBoolLocation;
+GLint textures[10];
 bool canSend = true;
 bool isOnline;
 double sendTime;
@@ -116,6 +117,27 @@ static inline GLuint createQuadVAO()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
     return VAO;
 }
+static inline GLuint loadTexture(const char *path)
+{
+    int width, height;
+    unsigned char *texData = stbi_load(path, &width, &height, NULL, 0);
+    if (texData == NULL)
+    {
+        return 0;
+    }
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    stbi_image_free(texData);
+    if (glGetError() != 0)
+    {
+        return 0;
+    }
+    return tex;
+}
 int initRenderer(bool online)
 {
     isOnline = online;
@@ -153,6 +175,17 @@ int initRenderer(bool online)
     {
         terminateRenderer();
         return -5;
+    }
+    char buffer[17];
+    for (int i = 0; i < 10; ++i)
+    {
+        sprintf(buffer, "./Textures/%d.png", i);
+        textures[i] = loadTexture(buffer);
+        if (textures[i] == 0)
+        {
+            terminateRenderer();
+            return -6;
+        }
     }
     float scaleFac = 4.0f;
     mat4s ortho = glms_ortho((-16.0f / 2.0f) * scaleFac,
