@@ -25,6 +25,8 @@ SOFTWARE.
 out vec4 color;
 in vec2 out_model;
 uniform int isBall;
+uniform int isScore;
+uniform sampler2D tex;
 void main(){
   color=vec4(1,1,1,1);
   if(isBall==1){
@@ -32,5 +34,10 @@ void main(){
     if(vecLength>0.5){
       discard;
     }
+  }
+  if(isScore==1){
+    vec2 uv=(out_model+vec2(1,1))/2;
+    uv.y*=-1;
+    color=texture(tex,uv);
   }
 }

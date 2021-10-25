@@ -25,7 +25,7 @@ SOFTWARE.
 GLFWwindow *pWindow;
 GLuint shaderProgram;
 GLuint quadVAO;
-GLint modelMatLocation, ballBoolLocation;
+GLint modelMatLocation, ballBoolLocation,scoreBoolLocation;
 GLint textures[10];
 bool canSend = true;
 bool isOnline;
@@ -201,6 +201,7 @@ int initRenderer(bool online)
     glUniformMatrix4fv(VPLocation, 1, GL_FALSE, &VP.raw);
     modelMatLocation = glGetUniformLocation(shaderProgram, "M");
     ballBoolLocation = glGetUniformLocation(shaderProgram, "isBall");
+    scoreBoolLocation = glGetUniformLocation(shaderProgram, "isScore");
     if (glGetError() != 0)
     {
         terminateRenderer();
@@ -238,6 +239,17 @@ static inline Event render(DrawInfo *drawInfo)
 
     glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glUniform1i(scoreBoolLocation, 1);
+    for (int i = 0; i < 2; ++i)
+    {
+        model = glms_translate(GLMS_MAT4_IDENTITY,
+                               (vec3s){.x = (i % 2) ? 5 : -5, .y = 15});
+        model = glms_scale(model,
+                           (vec3s){.x = 2, .y = 2});
+        glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, &model.raw);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+    glUniform1i(scoreBoolLocation, 0);
     glfwSwapBuffers(pWindow);
     glfwPollEvents();
     event.code = glGetError(); //TODO reset before release
