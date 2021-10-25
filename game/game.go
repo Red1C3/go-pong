@@ -98,6 +98,8 @@ func updateDrawInfo() {
 	}
 	drawInfo.p1 = C.float(players[0].Pos[1])
 	drawInfo.p2 = C.float(players[1].Pos[1])
+	drawInfo.scores[0] = C.int(players[0].Score)
+	drawInfo.scores[1] = C.int(players[1].Score)
 }
 
 //Handles C events
@@ -158,6 +160,7 @@ func reset(i float64) {
 type CDrawInfo struct {
 	P1, P2 float64
 	Ball   [2]float64
+	Scores [2]int
 }
 type CEvent struct {
 	Code int
@@ -175,6 +178,8 @@ func CLoop(dI CDrawInfo) CEvent {
 	drawInfo.p2 = C.float(dI.P2)
 	drawInfo.ball[0] = C.float(dI.Ball[0])
 	drawInfo.ball[1] = C.float(dI.Ball[1])
+	drawInfo.scores[0] = C.int(players[0].Score)
+	drawInfo.scores[1] = C.int(players[1].Score)
 	event := C.loop(drawInfo)
 	return CEvent{
 		Code: int(event.code),

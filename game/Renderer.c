@@ -25,7 +25,7 @@ SOFTWARE.
 GLFWwindow *pWindow;
 GLuint shaderProgram;
 GLuint quadVAO;
-GLint modelMatLocation, ballBoolLocation,scoreBoolLocation;
+GLint modelMatLocation, ballBoolLocation, scoreBoolLocation;
 GLint textures[10];
 bool canSend = true;
 bool isOnline;
@@ -242,6 +242,9 @@ static inline Event render(DrawInfo *drawInfo)
     glUniform1i(scoreBoolLocation, 1);
     for (int i = 0; i < 2; ++i)
     {
+        if (drawInfo->scores[i] > 9)
+            continue;
+        glBindTexture(GL_TEXTURE_2D, textures[drawInfo->scores[i]]);
         model = glms_translate(GLMS_MAT4_IDENTITY,
                                (vec3s){.x = (i % 2) ? 5 : -5, .y = 15});
         model = glms_scale(model,

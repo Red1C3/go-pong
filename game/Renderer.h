@@ -31,6 +31,7 @@ SOFTWARE.
 typedef struct{
     float p1, p2;
     float ball[2];
+    int scores[2];
 } DrawInfo;
 int initRenderer(bool online);
 Event loop(DrawInfo drawInfo);
