@@ -1,7 +1,7 @@
 # Go-Pong
 A Pong video game clone made with Go lang and OpenGL 3.3 using C.
 ## Gameplay
-![gameplay](snaps/snap-1.gif)
+![gameplay](snaps/snap-2.gif)
 ### Offline
 Key bindings are 'w' and 's' for the left player and 'up arrow' and 'down arrow' for the right player, score is kept in terminal (for now...)
 ### Multiplayer
@@ -9,13 +9,12 @@ go-pong supports multiplayer by hosting a game and joining it, hosting can be pe
 ## Deployment
 if you faced a problem when deploying go-pong server, remove ```import "C"``` and all the generated error from that action, build it, and run it on servers only (since offline and clients mode won't work without the C renderer)
 ## Building
-After installing the required dependencies, run ```go build```, make sure your executable is in the same folder than contains the *Shader* folder.
+After installing the required dependencies, run ```go build```, make sure your executable is in the same folder than contains the *Shader* and *Textures* folders.
 ### Dependencies:
-- [cglm](https://github.com/recp/cglm)
-- [glew](http://glew.sourceforge.net/)
-- [glfw](https://glfw.org/)
-## Roadmap
-A real score board might be added in the future.
+- [cglm](https://github.com/recp/cglm) (Runtime required)
+- [glew](http://glew.sourceforge.net/) (Runtime required)
+- [glfw](https://glfw.org/) (Runtime required)
+- [stb_image](https://github.com/nothings/stb)
 ## Contributions
 Are welcome !
 ## License
