@@ -178,8 +178,8 @@ func CLoop(dI CDrawInfo) CEvent {
 	drawInfo.p2 = C.float(dI.P2)
 	drawInfo.ball[0] = C.float(dI.Ball[0])
 	drawInfo.ball[1] = C.float(dI.Ball[1])
-	drawInfo.scores[0] = C.int(players[0].Score)
-	drawInfo.scores[1] = C.int(players[1].Score)
+	drawInfo.scores[0] = C.int(dI.Scores[0])
+	drawInfo.scores[1] = C.int(dI.Scores[1])
 	event := C.loop(drawInfo)
 	return CEvent{
 		Code: int(event.code),

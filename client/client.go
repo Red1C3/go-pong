@@ -30,6 +30,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -48,6 +49,7 @@ var (
 		ID         int
 		connection *websocket.Conn
 	}
+	scores [2]int
 	buffer bytes.Buffer
 
 	//decodes received data
@@ -184,6 +186,16 @@ func msgsHandler() {
 		}
 		if msgType == websocket.TextMessage {
 			fmt.Println(string(p))
+			if len(string(p)) == 5 {
+				scores[0], err = strconv.Atoi(string(p[0]))
+				if err != nil {
+					log.Fatal("Invalid score")
+				}
+				scores[1], err = strconv.Atoi(string(p[4]))
+				if err != nil {
+					log.Fatal("Invalid score")
+				}
+			}
 		}
 	}
 }
@@ -194,4 +206,6 @@ func updateDrawInfo() {
 	drawInfo.P2 = data.P2
 	drawInfo.Ball[0] = data.BallX
 	drawInfo.Ball[1] = data.BallY
+	drawInfo.Scores[0] = scores[0]
+	drawInfo.Scores[1] = scores[1]
 }
