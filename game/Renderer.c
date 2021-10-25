@@ -164,6 +164,8 @@ int initRenderer(bool online)
         return -3;
     }
     glClearColor(0, 0, 0, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_DST_ALPHA);
     shaderProgram = createShaderProgram();
     if (glGetError() != 0)
     {
