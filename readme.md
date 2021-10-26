@@ -1,7 +1,9 @@
 # Go-Pong
 A Pong video game clone made with Go lang and OpenGL 3.3 using C.
 ## Gameplay
-![img](https://i.imgur.com/FeGHUAD.gif)
+![gameplay](snaps/snap-3.png)
+![gameplay](snaps/snap-1.gif)
+
 
 Check [Dependencies](#dependencies)
 ### Offline
