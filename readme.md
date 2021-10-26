@@ -2,6 +2,9 @@
 A Pong video game clone made with Go lang and OpenGL 3.3 using C.
 ## Gameplay
 ![gameplay](snaps/snap-2.gif)
+
+
+Check [Dependencies](#dependencies)
 ### Offline
 Key bindings are 'w' and 's' for the left player and 'up arrow' and 'down arrow' for the right player, score is kept in terminal (for now...)
 ### Multiplayer
