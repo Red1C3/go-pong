@@ -11,7 +11,7 @@ go-pong supports multiplayer by hosting a game and joining it, hosting can be pe
 ## Deployment
 if you faced a problem when deploying go-pong server, remove ```import "C"``` and all the generated error from that action, build it, and run it on servers only (since offline and clients mode won't work without the C renderer)
 ## Building
-After installing the required dependencies, run ```go build```, make sure your executable is in the same folder than contains the *Shader* and *Textures* folders.
+After installing the required dependencies, run ```go build```, make sure your executable is in the same folder that contains the *Shader* and *Textures* folders.
 ### Dependencies:
 - [cglm](https://github.com/recp/cglm) (Runtime required)
 - [glew](http://glew.sourceforge.net/) (Runtime required)
