@@ -1,6 +1,7 @@
-/*MIT License
+/*
+MIT License
 
-Copyright (c) 2021 Mohammad Issawi
+# Copyright (c) 2021 Mohammad Issawi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,20 +31,15 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"net/http"
+	"net"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 var (
-	port     string
-	upgrader = websocket.Upgrader{
-		WriteBufferSize: 128,
-		ReadBufferSize:  128,
-	}
+	port            string
+	udpServerHandle net.PacketConn
 	gameLobby     = newLobby()
 	players       [2]game.Player
 	playersMutex  [2]sync.RWMutex
@@ -57,32 +53,54 @@ var (
 )
 
 func Start() {
+	var err error
 	port = os.Args[2]
 	log.Print("Starting server...")
-	http.HandleFunc("/", requestsHandler)
-	go http.ListenAndServe(":"+port, nil)
-	log.Print("Waiting for players...")
-	gameLobby.start()
-}
-func requestsHandler(w http.ResponseWriter, r *http.Request) {
-	if len(gameLobby.clients) == 2 {
-		return
-	}
-	connection, err := upgrader.Upgrade(w, r, nil)
+	udpServerHandle, err = net.ListenPacket("udp", ":"+port)
 	if err != nil {
-		log.Fatalf("Failed to connect to a client %v", err)
+		log.Fatal("Failed to start listening error: ", err.Error())
 	}
-	client := &client{
-		ID:         len(gameLobby.clients) + 1,
-		connection: connection,
-	}
-	gameLobby.connected <- client
-	client.start()
+	go waitForPlayers()
+	gameLobby.start()
+    err=udpServerHandle.Close()
+    if err!=nil{
+        log.Print("Failed to close UDP server, error: ",err.Error())
+    }
 }
-func broadcast(msgType int, content []byte) {
-	for client := range gameLobby.clients {
-		client.connection.WriteMessage(msgType, content)
+
+func waitForPlayers() {
+	log.Print("Waiting for players...")
+	for {
+		if len(gameLobby.clients) == 2 {
+			return
+		}
+		_, addr, err := udpServerHandle.ReadFrom(nil)
+		if err != nil {
+			log.Print("Failed to connect to ", addr.String(), " error: ", err.Error())
+			continue
+		}
+        client:=&client{
+            ID: len(gameLobby.clients),
+            address: addr,
+        }
+        gameLobby.connected <- client
+        go client.start()
 	}
+}
+func broadcast(content []byte) {
+	for client := range gameLobby.clients {
+        _,err:=udpServerHandle.WriteTo(content,client.address)
+        if err!=nil{
+            log.Print("Failed to send message to address ",client.address.String()," error:",err.Error())
+        }
+	}
+}
+
+func sendToAddress(addr net.Addr,msg []byte){
+    _,err:=udpServerHandle.WriteTo(msg,addr)
+    if err!=nil{
+        log.Print("Failed to send message to address ",addr.String()," error:",err.Error())
+    }
 }
 func startGame() {
 	time.Sleep(time.Second * 3)
@@ -116,18 +134,7 @@ func startGame() {
 			playersMutex[1].Unlock()
 		}
 	}
-	for client := range gameLobby.clients {
-		log.Print("Closing connection...")
-		err := client.connection.WriteControl(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-			time.Now().Add(time.Second))
-		if err != nil {
-			if err != websocket.ErrCloseSent {
-				log.Printf("Failed to close connection %v", err)
-			}
-		}
-		client.connection.Close()
-	}
+	//TODO send closing connection
 }
 func broadcastData() {
 	var structure struct {
@@ -142,7 +149,7 @@ func broadcastData() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	broadcast(websocket.BinaryMessage, buffer.Bytes())
+	broadcast(buffer.Bytes())
 }
 func reset(i float64) {
 	gameBall.Pos = [2]float64{i * 25, 0}
@@ -161,13 +168,13 @@ func reset(i float64) {
 	players[0].Pos[1] = 0
 	players[1].Pos[1] = 0
 	pauseTime = time.Now()
-	broadcast(websocket.TextMessage, []byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
+	broadcast([]byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
 	if players[0].Score > 9 {
-		broadcast(websocket.TextMessage, []byte("Player left won !"))
+		broadcast([]byte("Player left won !"))
 		closeChannel <- true
 	}
 	if players[1].Score > 9 {
-		broadcast(websocket.TextMessage, []byte("Player right won !"))
+		broadcast([]byte("Player right won !"))
 		closeChannel <- true
 	}
 }

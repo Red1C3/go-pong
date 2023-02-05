@@ -24,8 +24,6 @@ package server
 
 import (
 	"fmt"
-
-	"github.com/gorilla/websocket"
 )
 
 type lobby struct {
@@ -47,16 +45,16 @@ func (l *lobby) start() {
 		case client := <-l.connected:
 			l.clients[client] = true
 			fmt.Printf("A Player has connected with ID %v \n", client.ID)
-			client.connection.WriteMessage(websocket.BinaryMessage, []byte{byte(client.ID)})
-			broadcast(websocket.TextMessage, []byte("A new Player connected"))
+            sendToAddress(client.address,[]byte{byte(client.ID)})
+			broadcast([]byte("A new Player connected"))
 			if len(l.clients) == 2 {
-				broadcast(websocket.TextMessage, []byte("Ready"))
+				broadcast([]byte("Ready"))
 				startGame()
 			}
 		case client := <-l.disconnected:
 			delete(l.clients, client)
 			fmt.Printf("A Player has disconnected with ID %v \n", client.ID)
-			broadcast(websocket.TextMessage, []byte("A Player has disconnected"))
+			broadcast([]byte("A Player has disconnected"))
 		}
 	}
 }

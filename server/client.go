@@ -23,12 +23,12 @@ SOFTWARE.
 package server
 
 import (
-	"github.com/gorilla/websocket"
+    "net"
 )
 
 type client struct {
 	ID         int
-	connection *websocket.Conn
+    address net.Addr
 }
 
 func (c *client) start() {
@@ -36,20 +36,6 @@ func (c *client) start() {
 		gameLobby.disconnected <- c
 	}()
 	for {
-		msgType, p, err := c.connection.ReadMessage()
-		if err != nil {
-			return
-		}
-		if msgType == websocket.BinaryMessage && len(p) == 1 {
-			var dir int
-			if p[0] == 0 {
-				dir = -1
-			} else {
-				dir = 1
-			}
-			playersMutex[c.ID-1].Lock()
-			players[c.ID-1].Move(float64(dir)*30, deltaTime)
-			playersMutex[c.ID-1].Unlock()
-		}
+		//TODO Recive player position or direction from client
 	}
 }
