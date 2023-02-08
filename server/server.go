@@ -94,7 +94,7 @@ func waitForPlayers() {
 			address: addr,
 		}
 		gameLobby.connected <- c
-		//go listenToClient()
+		go listenToClient()
 	}
 }
 func broadcast(content []byte) {

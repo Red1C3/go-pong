@@ -42,6 +42,7 @@ type exchangeData struct {
 
 const (
 	CLOSE_MSG = "close"
+    READY_MSG="ready"
 )
 
 var (
@@ -88,21 +89,18 @@ func Start() {
 	client.ID = int(id[0])
 	fmt.Printf("Connected as Player %v \n", client.ID)
 	fmt.Println("Waiting for other players to join")
-	closeConnection()
-	return
-	/*for {
-		msgType, p, err := client.connection.ReadMessage()
+    var buffer [32]byte
+	for {
+        n,err:=client.connection.Read(buffer[:])
 		if err != nil {
 			fmt.Printf("Failed to read msg from server %v", err)
 			closeConnection()
 			return
 		}
-		if msgType == websocket.TextMessage {
-			if string(p) == "Ready" {
-				break
-			}
-		}
-	}*/
+		if string(buffer[:n])==READY_MSG{
+            break
+        }
+	}
 	fmt.Println("Players connected, starting game...")
 	go msgsHandler()
 	startGame()

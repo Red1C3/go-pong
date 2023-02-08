@@ -50,7 +50,6 @@ func listenToClient(){
         if err!=nil{
             log.Print("Failed to read input from a clientStr, error:",err.Error())
         }
-        log.Print(string(buffer[:n]))
         if string(buffer[:n])==client.CLOSE_MSG{
             gameLobby.disconnected<-gameLobby.clients[addr.String()]
             return
