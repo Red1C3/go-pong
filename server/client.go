@@ -34,15 +34,6 @@ type clientStr struct {
 	address net.Addr
 }
 
-func (c *clientStr) start() {
-	defer func() {
-		gameLobby.disconnected <- c
-	}()
-	for {
-        //If clientStr sends a closing message do break
-		//TODO Recive player position or direction from clientStr
-	}
-}
 func listenToClient(){
     var buffer [64]byte
     for{

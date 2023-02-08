@@ -184,6 +184,12 @@ func msgsHandler() {
 			data.mutex.Unlock()
 			continue
 		}
+        
+        if string(b[:n])==CLOSE_MSG{
+            closeChannel<-true
+            return
+        }
+
 		fmt.Println(string(b[:n]))
 		if n == 5 {
 			scores[0], err = strconv.Atoi(string(b[0]))
