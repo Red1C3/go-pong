@@ -27,6 +27,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"go-pong/client"
 	"go-pong/game"
 	"log"
 	"math"
@@ -40,16 +41,16 @@ import (
 var (
 	port            string
 	udpServerHandle net.PacketConn
-	gameLobby     = newLobby()
-	players       [2]game.Player
-	playersMutex  [2]sync.RWMutex
-	gameBall      game.Ball
-	pauseTime     time.Time
-	savedVelocity [2]float64
-	deltaTime     float64
-	encoder       *gob.Encoder
-	buffer        bytes.Buffer
-	closeChannel  = make(chan bool, 1)
+	gameLobby       = newLobby()
+	players         [2]game.Player
+	playersMutex    [2]sync.RWMutex
+	gameBall        game.Ball
+	pauseTime       time.Time
+	savedVelocity   [2]float64
+	deltaTime       float64
+	encoder         *gob.Encoder
+	buffer          bytes.Buffer
+	closeChannel    = make(chan bool, 1)
 )
 
 func Start() {
@@ -62,45 +63,54 @@ func Start() {
 	}
 	go waitForPlayers()
 	gameLobby.start()
-    err=udpServerHandle.Close()
-    if err!=nil{
-        log.Print("Failed to close UDP server, error: ",err.Error())
-    }
+	err = udpServerHandle.Close()
+	if err != nil {
+		log.Print("Failed to close UDP server, error: ", err.Error())
+	}
 }
 
 func waitForPlayers() {
+	var buffer [64]byte
 	log.Print("Waiting for players...")
 	for {
 		if len(gameLobby.clients) == 2 {
 			return
 		}
-		_, addr, err := udpServerHandle.ReadFrom(nil)
+		n, addr, err := udpServerHandle.ReadFrom(buffer[:])
 		if err != nil {
 			log.Print("Failed to connect to ", addr.String(), " error: ", err.Error())
 			continue
 		}
-        client:=&client{
-            ID: len(gameLobby.clients),
-            address: addr,
-        }
-        gameLobby.connected <- client
-        go client.start()
+		if c, ok := gameLobby.clients[addr.String()]; ok {
+			log.Print(string(buffer[:n]))
+			if string(buffer[:n]) == client.CLOSE_MSG {
+				gameLobby.disconnected <- c
+				continue
+			}
+		}
+
+		c := &clientStr{
+			ID:      byte(len(gameLobby.clients)),
+			address: addr,
+		}
+		gameLobby.connected <- c
+		//go listenToClient()
 	}
 }
 func broadcast(content []byte) {
-	for client := range gameLobby.clients {
-        _,err:=udpServerHandle.WriteTo(content,client.address)
-        if err!=nil{
-            log.Print("Failed to send message to address ",client.address.String()," error:",err.Error())
-        }
+	for _, c := range gameLobby.clients {
+		_, err := udpServerHandle.WriteTo(content, c.address)
+		if err != nil {
+			log.Print("Failed to send message to address ", c.address.String(), " error:", err.Error())
+		}
 	}
 }
 
-func sendToAddress(addr net.Addr,msg []byte){
-    _,err:=udpServerHandle.WriteTo(msg,addr)
-    if err!=nil{
-        log.Print("Failed to send message to address ",addr.String()," error:",err.Error())
-    }
+func sendToAddress(addr net.Addr, msg []byte) {
+	_, err := udpServerHandle.WriteTo(msg, addr)
+	if err != nil {
+		log.Print("Failed to send message to address ", addr.String(), " error:", err.Error())
+	}
 }
 func startGame() {
 	time.Sleep(time.Second * 3)

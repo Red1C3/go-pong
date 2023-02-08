@@ -1,6 +1,7 @@
-/*MIT License
+/*
+MIT License
 
-Copyright (c) 2021 Mohammad Issawi
+# Copyright (c) 2021 Mohammad Issawi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,19 +24,36 @@ SOFTWARE.
 package server
 
 import (
+    "go-pong/client"
+    "log"
     "net"
 )
 
-type client struct {
-	ID         int
-    address net.Addr
+type clientStr struct {
+	ID      byte
+	address net.Addr
 }
 
-func (c *client) start() {
+func (c *clientStr) start() {
 	defer func() {
 		gameLobby.disconnected <- c
 	}()
 	for {
-		//TODO Recive player position or direction from client
+        //If clientStr sends a closing message do break
+		//TODO Recive player position or direction from clientStr
 	}
+}
+func listenToClient(){
+    var buffer [64]byte
+    for{
+        n,addr,err:=udpServerHandle.ReadFrom(buffer[:])
+        if err!=nil{
+            log.Print("Failed to read input from a clientStr, error:",err.Error())
+        }
+        log.Print(string(buffer[:n]))
+        if string(buffer[:n])==client.CLOSE_MSG{
+            gameLobby.disconnected<-gameLobby.clients[addr.String()]
+            return
+        }
+    }
 }

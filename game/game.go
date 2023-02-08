@@ -23,7 +23,7 @@ SOFTWARE.
 
 package game
 
-// #cgo pkg-config: glfw3 glew cglm
+// #cgo pkg-config: glfw3 glew
 // #cgo LDFLAGS:  -lm
 // #define STB_IMAGE_IMPLEMENTATION
 // #include<stb/stb_image.h>

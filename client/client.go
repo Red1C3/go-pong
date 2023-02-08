@@ -1,6 +1,7 @@
-/*MIT License
+/*
+MIT License
 
-Copyright (c) 2021 Mohammad Issawi
+# Copyright (c) 2021 Mohammad Issawi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,26 +29,26 @@ import (
 	"fmt"
 	"go-pong/game"
 	"log"
-	"net/url"
+	"net"
 	"os"
-	"strconv"
 	"sync"
-	"time"
-
-	"github.com/gorilla/websocket"
 )
 
-//structure used for server recieving
+// structure used for server recieving
 type exchangeData struct {
 	mutex                sync.RWMutex
 	P1, P2, BallX, BallY float64
 }
 
+const (
+	CLOSE_MSG = "close"
+)
+
 var (
 	data   exchangeData
 	client struct {
 		ID         int
-		connection *websocket.Conn
+		connection *net.UDPConn
 	}
 	scores [2]int
 	buffer bytes.Buffer
@@ -59,30 +60,37 @@ var (
 )
 
 func Start() {
-	var err error
 	decoder = gob.NewDecoder(&buffer)
 	drawInfo = game.CDrawInfo{
 		Ball: [2]float64{0, 0},
 		P1:   0,
 		P2:   0,
 	}
-	serverURL := url.URL{Scheme: "ws", Host: os.Args[1], Path: "/"}
-	client.connection, _, err = websocket.DefaultDialer.Dial(serverURL.String(), nil)
+	udpServer, err := net.ResolveUDPAddr("udp", os.Args[1])
 	if err != nil {
-		if err == websocket.ErrBadHandshake {
-			fmt.Println("Game is already in progress")
-			return
-		}
-		log.Fatal(err)
+		log.Fatal("Failed to resolve address ", os.Args[1], " error: ", err.Error())
 	}
-	_, p, err := client.connection.ReadMessage()
+	client.connection, err = net.DialUDP("udp", nil, udpServer)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to dial server, error:", err.Error())
 	}
-	client.ID = int(p[0])
+	log.Println("Connected to server")
+	_, err = client.connection.Write([]byte("")) //Connecting message
+	if err != nil {
+		log.Fatal("Failed to send connecting message to server")
+	}
+
+	var id [1]byte
+	_, err = client.connection.Read(id[:])
+	if err != nil {
+		log.Fatal("Failed to recieve id from server, error:", err.Error())
+	}
+	client.ID = int(id[0])
 	fmt.Printf("Connected as Player %v \n", client.ID)
 	fmt.Println("Waiting for other players to join")
-	for {
+	closeConnection()
+	return
+	/*for {
 		msgType, p, err := client.connection.ReadMessage()
 		if err != nil {
 			fmt.Printf("Failed to read msg from server %v", err)
@@ -94,7 +102,7 @@ func Start() {
 				break
 			}
 		}
-	}
+	}*/
 	fmt.Println("Players connected, starting game...")
 	go msgsHandler()
 	startGame()
@@ -103,15 +111,14 @@ func Start() {
 }
 func closeConnection() {
 	fmt.Println("Closing connection...")
-	err := client.connection.WriteControl(websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-		time.Now().Add(time.Second))
+	_, err := client.connection.Write([]byte(CLOSE_MSG))
 	if err != nil {
-		if err != websocket.ErrCloseSent {
-			fmt.Printf("Failed to close connection %v \n", err)
-		}
+		log.Print("Failed to send closing message to server, error:", err.Error())
 	}
-	client.connection.Close()
+	err = client.connection.Close()
+	if err != nil {
+		log.Fatal("Failed to close connection to server")
+	}
 }
 func startGame() {
 	err := game.CInitRenderer()
@@ -138,12 +145,12 @@ func eventsHandler(dI game.CDrawInfo) int {
 	case 1:
 		return 1
 	case 2:
-		switch event.Key {
+		/*switch event.Key {
 		case 'u':
 			client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
 		case 'd':
 			client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
-		}
+		}*/
 
 		return 2
 	default:
@@ -152,7 +159,7 @@ func eventsHandler(dI game.CDrawInfo) int {
 	}
 }
 func msgsHandler() {
-	for {
+	/*for {
 		msgType, p, err := client.connection.ReadMessage()
 		if err != nil {
 			if ce, ok := err.(*websocket.CloseError); ok {
@@ -197,7 +204,7 @@ func msgsHandler() {
 				}
 			}
 		}
-	}
+	}*/
 }
 func updateDrawInfo() {
 	data.mutex.RLock()

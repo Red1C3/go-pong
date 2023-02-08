@@ -1,6 +1,7 @@
-/*MIT License
+/*
+MIT License
 
-Copyright (c) 2021 Mohammad Issawi
+# Copyright (c) 2021 Mohammad Issawi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,32 +28,32 @@ import (
 )
 
 type lobby struct {
-	connected    chan *client
-	disconnected chan *client
-	clients      map[*client]bool
+	connected    chan *clientStr
+	disconnected chan *clientStr
+	clients      map[string]*clientStr
 }
 
 func newLobby() lobby {
 	return lobby{
-		connected:    make(chan *client),
-		disconnected: make(chan *client),
-		clients:      make(map[*client]bool),
+		connected:    make(chan *clientStr),
+		disconnected: make(chan *clientStr),
+		clients:      make(map[string]*clientStr),
 	}
 }
 func (l *lobby) start() {
 	for {
 		select {
 		case client := <-l.connected:
-			l.clients[client] = true
+			l.clients[client.address.String()] = client
 			fmt.Printf("A Player has connected with ID %v \n", client.ID)
-            sendToAddress(client.address,[]byte{byte(client.ID)})
+			sendToAddress(client.address, []byte{client.ID})
 			broadcast([]byte("A new Player connected"))
 			if len(l.clients) == 2 {
 				broadcast([]byte("Ready"))
 				startGame()
 			}
 		case client := <-l.disconnected:
-			delete(l.clients, client)
+			delete(l.clients, client.address.String())
 			fmt.Printf("A Player has disconnected with ID %v \n", client.ID)
 			broadcast([]byte("A Player has disconnected"))
 		}
