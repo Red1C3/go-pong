@@ -31,6 +31,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 )
 
@@ -42,7 +43,7 @@ type exchangeData struct {
 
 const (
 	CLOSE_MSG = "close"
-    READY_MSG="ready"
+	READY_MSG = "ready"
 )
 
 var (
@@ -89,17 +90,17 @@ func Start() {
 	client.ID = int(id[0])
 	fmt.Printf("Connected as Player %v \n", client.ID)
 	fmt.Println("Waiting for other players to join")
-    var buffer [32]byte
+	var buffer [32]byte
 	for {
-        n,err:=client.connection.Read(buffer[:])
+		n, err := client.connection.Read(buffer[:])
 		if err != nil {
 			fmt.Printf("Failed to read msg from server %v", err)
 			closeConnection()
 			return
 		}
-		if string(buffer[:n])==READY_MSG{
-            break
-        }
+		if string(buffer[:n]) == READY_MSG {
+			break
+		}
 	}
 	fmt.Println("Players connected, starting game...")
 	go msgsHandler()
@@ -123,10 +124,10 @@ func startGame() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for close := false; !close; {
+	for cls := false; !cls; {
 		select {
 		case <-closeChannel:
-			close = true
+			cls = true
 		default:
 		}
 		updateDrawInfo()
@@ -144,11 +145,11 @@ func eventsHandler(dI game.CDrawInfo) int {
 		return 1
 	case 2:
 		/*switch event.Key {
-		case 'u':
-			client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
-		case 'd':
-			client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
-		}*/
+		  case 'u':
+		  	client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
+		  case 'd':
+		  	client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
+		  }*/
 
 		return 2
 	default:
@@ -157,52 +158,44 @@ func eventsHandler(dI game.CDrawInfo) int {
 	}
 }
 func msgsHandler() {
-	/*for {
-		msgType, p, err := client.connection.ReadMessage()
+	var structure struct {
+		P1, P2, BallX, BallY float64
+	}
+
+	var b [64]byte
+
+	for {
+		n, err := client.connection.Read(b[:])
 		if err != nil {
-			if ce, ok := err.(*websocket.CloseError); ok {
-				if ce.Code == websocket.CloseNormalClosure {
-					fmt.Println("Connection closed from server")
-					closeChannel <- true
-					return
-				}
-			}
-			log.Fatalf("error while reading msg from client %v : %v", client.ID, err)
+			log.Print("Failed to read from server, error:", err.Error())
 		}
-		if msgType == websocket.BinaryMessage {
-			buffer.Reset()
-			_, err := buffer.Write(p)
-			if err != nil {
-				log.Fatalf("Error while writing to buffer %v", err)
-			}
-			var structure struct {
-				P1, P2, BallX, BallY float64
-			}
-			err = decoder.Decode(&structure)
-			if err != nil {
-				log.Fatalf("Decoder err %v", err)
-			}
+		buffer.Reset()
+		_, err = buffer.Write(b[:])
+		if err != nil {
+			log.Fatal("Failed to write message content to buffer, error:", err.Error())
+		}
+		err = decoder.Decode(&structure)
+		if err == nil {
 			data.mutex.Lock()
-			data.P1 = structure.P1
 			data.P2 = structure.P2
+			data.P1 = structure.P1
 			data.BallX = structure.BallX
 			data.BallY = structure.BallY
 			data.mutex.Unlock()
+			continue
 		}
-		if msgType == websocket.TextMessage {
-			fmt.Println(string(p))
-			if len(string(p)) == 5 {
-				scores[0], err = strconv.Atoi(string(p[0]))
-				if err != nil {
-					log.Fatal("Invalid score")
-				}
-				scores[1], err = strconv.Atoi(string(p[4]))
-				if err != nil {
-					log.Fatal("Invalid score")
-				}
+		fmt.Println(string(b[:n]))
+		if n == 5 {
+			scores[0], err = strconv.Atoi(string(b[0]))
+			if err != nil {
+				log.Fatal("Invalid score")
+			}
+			scores[1], err = strconv.Atoi(string(b[4]))
+			if err != nil {
+				log.Fatal("Invalid score")
 			}
 		}
-	}*/
+	}
 }
 func updateDrawInfo() {
 	data.mutex.RLock()
