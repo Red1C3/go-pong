@@ -28,6 +28,7 @@ import (
     "go-pong/client"
 )
 
+
 type lobby struct {
 	connected    chan *clientStr
 	disconnected chan *clientStr

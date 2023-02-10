@@ -33,8 +33,8 @@ import (
 	"math"
 	"math/rand"
 	"net"
-	"os"
-	"sync"
+    "os"
+    "sync"
 	"time"
 )
 
@@ -73,10 +73,21 @@ func waitForPlayers() {
 	var buffer [64]byte
 	log.Print("Waiting for players...")
 	for {
+        err:=udpServerHandle.SetReadDeadline(time.Now().Add(time.Second))
+        if err!=nil{
+            log.Fatal("Failed to set read deadline")
+        }
 		if len(gameLobby.clients) == 2 {
+            err=udpServerHandle.SetReadDeadline(time.Time{})
+            if err!=nil{
+                log.Fatal("Failed to reset read deadline")
+            }
 			return
 		}
 		n, addr, err := udpServerHandle.ReadFrom(buffer[:])
+        if addr==nil{
+            continue
+        }
 		if err != nil {
 			log.Print("Failed to connect to ", addr.String(), " error: ", err.Error())
 			continue

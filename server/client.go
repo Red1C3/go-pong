@@ -38,8 +38,12 @@ func listenToClient(){
     var buffer [64]byte
     for{
         n,addr,err:=udpServerHandle.ReadFrom(buffer[:])
+        if addr==nil{
+            continue
+        }
         if err!=nil{
-            log.Print("Failed to read input from a clientStr, error:",err.Error())
+            log.Print("Failed to read input from ",addr.String() ,"error:",err.Error())
+            continue
         }
         if n==1{
             var dir int
