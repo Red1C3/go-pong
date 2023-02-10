@@ -144,13 +144,16 @@ func eventsHandler(dI game.CDrawInfo) int {
 	case 1:
 		return 1
 	case 2:
-		/*switch event.Key {
+        var err error
+		switch event.Key {
 		  case 'u':
-		  	client.connection.WriteMessage(websocket.BinaryMessage, []byte{1})
+              _,err=client.connection.Write([]byte{1})
 		  case 'd':
-		  	client.connection.WriteMessage(websocket.BinaryMessage, []byte{0})
-		  }*/
-
+              _,err=client.connection.Write([]byte{0})
+		  }
+        if err!=nil{
+            log.Fatal("Failed to send direction byte to server, error:",err.Error())
+        }
 		return 2
 	default:
 		log.Fatalf("Unknown event code: %v", event.Code)

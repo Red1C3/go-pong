@@ -41,6 +41,17 @@ func listenToClient(){
         if err!=nil{
             log.Print("Failed to read input from a clientStr, error:",err.Error())
         }
+        if n==1{
+            var dir int
+            if buffer[0]==0{
+                dir=-1
+            }else{
+                dir=1
+            }
+            playersMutex[gameLobby.clients[addr.String()].ID].Lock()
+            players[gameLobby.clients[addr.String()].ID].Move(float64(dir)*30, deltaTime)
+            playersMutex[gameLobby.clients[addr.String()].ID].Unlock()
+        }
         if string(buffer[:n])==client.CLOSE_MSG{
             gameLobby.disconnected<-gameLobby.clients[addr.String()]
             return
