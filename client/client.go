@@ -42,8 +42,12 @@ type exchangeData struct {
 }
 
 const (
-	CLOSE_MSG = "close"
-	READY_MSG = "ready"
+	CLOSE_MSG = byte(0x0F)
+	READY_MSG = byte(0x1F)
+    CONNECT_MSG=byte(0x2F)
+    OTHER_DISCONNECT_MSG=byte(0x3F)
+    ID_MSG=byte(0x4F)
+    OTHER_CONNECT_MSG=byte(0x5F)
 )
 
 var (

@@ -61,7 +61,7 @@ func Start() {
 	if err != nil {
 		log.Fatal("Failed to start listening error: ", err.Error())
 	}
-	go waitForPlayers()
+	waitForPlayers()
 	gameLobby.start()
 	err = udpServerHandle.Close()
 	if err != nil {
@@ -72,41 +72,39 @@ func Start() {
 func waitForPlayers() {
 	var buffer [64]byte
 	log.Print("Waiting for players...")
-	for {
-		err := udpServerHandle.SetReadDeadline(time.Now().Add(time.Second))
-		if err != nil {
-			log.Fatal("Failed to set read deadline")
-		}
-		if len(gameLobby.clients) == 2 {
-			err = udpServerHandle.SetReadDeadline(time.Time{})
-			if err != nil {
-				log.Fatal("Failed to reset read deadline")
-			}
-			return
-		}
-		n, addr, err := udpServerHandle.ReadFrom(buffer[:])
-		if addr == nil {
-			continue
-		}
-		if err != nil {
-			log.Print("Failed to connect to ", addr.String(), " error: ", err.Error())
-			continue
-		}
-		if c, ok := gameLobby.clients[addr.String()]; ok {
-			log.Print(string(buffer[:n]))
-			if string(buffer[:n]) == client.CLOSE_MSG {
-				gameLobby.disconnected <- c
-				continue
-			}
-		}
-
-		c := &clientStr{
-			ID:      byte(len(gameLobby.clients)),
-			address: addr,
-		}
-		gameLobby.connected <- c
-		go listenToClient()
-	}
+	for{
+        if len(gameLobby.clients)==2{
+            return
+        }
+        n,addr,err:=udpServerHandle.ReadFrom(buffer[:])
+        if err!=nil{
+            if addr!=nil{
+                log.Print("Failed to read from address:",addr.String(),", error:",err.Error())
+            }else{
+                log.Print("Failed to read, error:",err.Error())
+            }
+        }
+        if c,ok:=gameLobby.clients[addr.String()];ok{
+            if n==1 && buffer[0]==client.CLOSE_MSG{
+                delete(gameLobby.clients,addr.String())
+                fmt.Printf("A Player has disconnected with ID %v \n", c.ID)
+                broadcast([]byte{client.OTHER_DISCONNECT_MSG,c.ID})
+            }else{
+                log.Print("Client sent an unexpected message:",string(buffer[:n]))
+            }
+        }else if n==1 && buffer[0]==client.CONNECT_MSG{
+            newClient:=&clientStr{
+                ID:byte(len(gameLobby.clients)),
+                address: addr,
+            }
+            gameLobby.clients[addr.String()] = newClient
+            fmt.Printf("A Player has connected with ID %v \n", newClient.ID)
+            sendToAddress(c.address, []byte{client.ID_MSG,newClient.ID})
+            broadcast([]byte{client.OTHER_CONNECT_MSG,newClient.ID})
+        }else{
+            log.Print("Non-client sent an unexpected message, address:",addr.String()," messages:",string(buffer[:n]))
+        }
+    }
 }
 func broadcast(content []byte) {
 	for _, c := range gameLobby.clients {
