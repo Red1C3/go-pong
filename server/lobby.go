@@ -23,41 +23,13 @@ SOFTWARE.
 */
 package server
 
-import (
-	"fmt"
-    "go-pong/client"
-)
-
-
 type lobby struct {
-	connected    chan *clientStr
-	disconnected chan *clientStr
 	clients      map[string]*clientStr
 }
 
 func newLobby() lobby {
 	return lobby{
-		connected:    make(chan *clientStr),
-		disconnected: make(chan *clientStr),
 		clients:      make(map[string]*clientStr),
 	}
 }
-func (l *lobby) start() {
-	for {
-		select {
-		case c := <-l.connected:
-			l.clients[c.address.String()] = c
-			fmt.Printf("A Player has connected with ID %v \n", c.ID)
-			sendToAddress(c.address, []byte{c.ID})
-			broadcast([]byte("A new Player connected"))
-			if len(l.clients) == 2 {
-				broadcast([]byte(client.READY_MSG))
-				startGame()
-			}
-		case c := <-l.disconnected:
-			delete(l.clients, c.address.String())
-			fmt.Printf("A Player has disconnected with ID %v \n", c.ID)
-			broadcast([]byte("A Player has disconnected"))
-		}
-	}
-}
+
