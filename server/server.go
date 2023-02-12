@@ -190,13 +190,13 @@ func reset(i float64) {
 	players[0].Pos[1] = 0
 	players[1].Pos[1] = 0
 	pauseTime = time.Now()
-	broadcast([]byte(fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)))
+	broadcast(append([]byte{client.SCORE_MSG}, fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)...))
 	if players[0].Score > 9 {
-		broadcast([]byte("Player left won !"))
+		broadcast(append([]byte{client.SCORE_MSG}, "Player Left Won !"...))
 		closeChannel <- true
 	}
 	if players[1].Score > 9 {
-		broadcast([]byte("Player right won !"))
+		broadcast(append([]byte{client.SCORE_MSG}, "Player Right Won !"...))
 		closeChannel <- true
 	}
 }

@@ -49,6 +49,7 @@ const (
 	ID_MSG               = byte(0x4F)
 	OTHER_CONNECT_MSG    = byte(0x5F)
 	DATA_MSG             = byte(0x6F)
+	SCORE_MSG            = byte(0x7F)
 )
 
 var (
@@ -64,6 +65,7 @@ var (
 	decoder      *gob.Decoder
 	drawInfo     game.CDrawInfo
 	closeChannel = make(chan bool)
+	readyChannel = make(chan bool)
 )
 
 func Start() {
@@ -82,33 +84,13 @@ func Start() {
 		log.Fatal("Failed to dial server, error:", err.Error())
 	}
 	log.Println("Connected to server")
-	_, err = client.connection.Write([]byte("")) //Connecting message
+	_, err = client.connection.Write([]byte{CONNECT_MSG}) //Connecting message
 	if err != nil {
 		log.Fatal("Failed to send connecting message to server")
 	}
 
-	var id [1]byte
-	_, err = client.connection.Read(id[:])
-	if err != nil {
-		log.Fatal("Failed to recieve id from server, error:", err.Error())
-	}
-	client.ID = int(id[0])
-	fmt.Printf("Connected as Player %v \n", client.ID)
-	fmt.Println("Waiting for other players to join")
-	var buffer [32]byte
-	for {
-		n, err := client.connection.Read(buffer[:])
-		if err != nil {
-			fmt.Printf("Failed to read msg from server %v", err)
-			closeConnection()
-			return
-		}
-		if string(buffer[:n]) == READY_MSG {
-			break
-		}
-	}
-	fmt.Println("Players connected, starting game...")
-	go msgsHandler()
+	go listenToServer()
+	<-readyChannel
 	startGame()
 	closeConnection()
 	game.Terminate()
@@ -165,7 +147,7 @@ func eventsHandler(dI game.CDrawInfo) int {
 		return -1
 	}
 }
-func msgsHandler() {
+func listenToServer() {
 	var structure struct {
 		P1, P2, BallX, BallY float64
 	}
@@ -177,37 +159,44 @@ func msgsHandler() {
 		if err != nil {
 			log.Print("Failed to read from server, error:", err.Error())
 		}
-		buffer.Reset()
-		_, err = buffer.Write(b[:])
-		if err != nil {
-			log.Fatal("Failed to write message content to buffer, error:", err.Error())
-		}
-		err = decoder.Decode(&structure)
-		if err == nil {
+		switch b[0] {
+		case CLOSE_MSG:
+		case DATA_MSG:
+			buffer.Reset()
+			_, err = buffer.Write(b[1:])
+			if err != nil {
+				log.Fatal("Failed to write message content to buffer, error:", err.Error())
+			}
+			err = decoder.Decode(&structure)
+			if err != nil {
+				log.Print("Failed to decode data msg, error: ", err.Error())
+			}
 			data.mutex.Lock()
 			data.P2 = structure.P2
 			data.P1 = structure.P1
 			data.BallX = structure.BallX
 			data.BallY = structure.BallY
 			data.mutex.Unlock()
-			continue
-		}
-
-		if string(b[:n]) == CLOSE_MSG {
-			closeChannel <- true
-			return
-		}
-
-		fmt.Println(string(b[:n]))
-		if n == 5 {
-			scores[0], err = strconv.Atoi(string(b[0]))
+		case ID_MSG:
+			client.ID = int(b[1])
+		case OTHER_CONNECT_MSG:
+			log.Print("A player has joined with ID ", b[1])
+		case OTHER_DISCONNECT_MSG:
+			log.Print("A player has disconnected with ID ", b[1])
+		case READY_MSG:
+			readyChannel <- true
+		case SCORE_MSG:
+			log.Print(string(b[1:n]))
+			scores[0], err = strconv.Atoi(string(b[1]))
 			if err != nil {
 				log.Fatal("Invalid score")
 			}
-			scores[1], err = strconv.Atoi(string(b[4]))
+			scores[1], err = strconv.Atoi(string(b[5]))
 			if err != nil {
 				log.Fatal("Invalid score")
 			}
+		default:
+			log.Print("Server sent unknown message type:", b[0])
 		}
 	}
 }
