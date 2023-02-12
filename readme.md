@@ -22,4 +22,4 @@ Are welcome !
 ## License
 Under MIT, check [License](LICENSE)
 
-### Created with fuzzy kittens, with the help of RedDeadAlice
+### Created with fuzzy kittens, with the help of Red1C3
