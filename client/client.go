@@ -97,7 +97,7 @@ func Start() {
 func closeConnection(sendCloseMsg bool) {
 	fmt.Println("Closing connection...")
     if sendCloseMsg{
-        _, err := client.connection.Write([]byte(CLOSE_MSG))
+        _, err := client.connection.Write([]byte{CLOSE_MSG})
         if err != nil {
             log.Print("Failed to send closing message to server, error:", err.Error())
         }
