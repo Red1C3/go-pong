@@ -1,26 +1,3 @@
-/*
-MIT License
-
-# Copyright (c) 2021 Mohammad Issawi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 package client
 
 import (
@@ -96,12 +73,12 @@ func Start() {
 }
 func closeConnection(sendCloseMsg bool) {
 	fmt.Println("Closing connection...")
-    if sendCloseMsg{
-        _, err := client.connection.Write([]byte{CLOSE_MSG})
-        if err != nil {
-            log.Print("Failed to send closing message to server, error:", err.Error())
-        }
-    }
+	if sendCloseMsg {
+		_, err := client.connection.Write([]byte{CLOSE_MSG})
+		if err != nil {
+			log.Print("Failed to send closing message to server, error:", err.Error())
+		}
+	}
 	err := client.connection.Close()
 	if err != nil {
 		log.Fatal("Failed to close connection to server")
@@ -115,14 +92,14 @@ func startGame() {
 	for {
 		select {
 		case <-closeChannel:
-            closeConnection(false)
+			closeConnection(false)
 			return
 		default:
 		}
 		updateDrawInfo()
 		if eventsHandler(drawInfo) == 1 {
-            closeChannel<-true
-            closeConnection(true)
+			closeChannel <- true
+			closeConnection(true)
 			return
 		}
 	}
@@ -138,9 +115,9 @@ func eventsHandler(dI game.CDrawInfo) int {
 		var err error
 		switch event.Key {
 		case 'u':
-			_, err = client.connection.Write([]byte{DATA_MSG,1})
+			_, err = client.connection.Write([]byte{DATA_MSG, 1})
 		case 'd':
-			_, err = client.connection.Write([]byte{DATA_MSG,0})
+			_, err = client.connection.Write([]byte{DATA_MSG, 0})
 		}
 		if err != nil {
 			log.Fatal("Failed to send direction byte to server, error:", err.Error())
@@ -159,19 +136,19 @@ func listenToServer() {
 	var b [64]byte
 
 	for {
-        select{
-        case <-closeChannel:
-            return
-        default:
-        }
+		select {
+		case <-closeChannel:
+			return
+		default:
+		}
 		n, err := client.connection.Read(b[:])
 		if err != nil {
 			log.Print("Failed to read from server, error:", err.Error())
 		}
 		switch b[0] {
 		case CLOSE_MSG:
-            closeChannel<-true
-            return
+			closeChannel <- true
+			return
 		case DATA_MSG:
 			buffer.Reset()
 			_, err = buffer.Write(b[1:])

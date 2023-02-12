@@ -1,26 +1,3 @@
-/*MIT License
-
-Copyright (c) 2021 Mohammad Issawi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 package game
 
 // #cgo pkg-config: glfw3 glew
@@ -37,12 +14,12 @@ import (
 	"time"
 )
 
-//geomatric line, formatted as y = a * x + b
+// geomatric line, formatted as y = a * x + b
 type line struct {
 	a, b float64
 }
 
-//game constants, change for different difficulty
+// game constants, change for different difficulty
 const (
 	playerSpeed    = 30.0
 	ScoreGain      = 1.01
@@ -87,7 +64,7 @@ func gameLogic() {
 	}
 }
 
-//Updates the structure sent to C code to draw properlys
+// Updates the structure sent to C code to draw properlys
 func updateDrawInfo() {
 	if gameBall.Pos[0] > players[0].Pos[0] && gameBall.Pos[0] < players[1].Pos[0] {
 		drawInfo.ball[0] = C.float(gameBall.Pos[0])
@@ -102,7 +79,7 @@ func updateDrawInfo() {
 	drawInfo.scores[1] = C.int(players[1].Score)
 }
 
-//Handles C events
+// Handles C events
 func eventsHandler(dI C.DrawInfo) int {
 	event := C.loop(dI)
 	//if resat, wait for (ResetTime) seconds before starting...
@@ -137,7 +114,7 @@ func eventsHandler(dI C.DrawInfo) int {
 	}
 }
 
-//called when a Player scores
+// called when a Player scores
 func reset(i float64) {
 	gameBall.Pos = [2]float64{i * 25, 0}
 	//create a new Velocity vector with the same speed of the current one
