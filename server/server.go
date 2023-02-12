@@ -103,7 +103,7 @@ func waitForPlayers() {
 			}
 			gameLobby.clients[addr.String()] = newClient
 			fmt.Printf("A Player has connected with ID %v \n", newClient.ID)
-			sendToAddress(c.address, []byte{client.ID_MSG, newClient.ID})
+			sendToAddress(newClient.address, []byte{client.ID_MSG, newClient.ID})
 			broadcast([]byte{client.OTHER_CONNECT_MSG, newClient.ID})
 		} else {
 			log.Print("Non-client sent an unexpected message, address:", addr.String(), " messages:", string(buffer[:n]))
@@ -192,11 +192,9 @@ func reset(i float64) {
 	pauseTime = time.Now()
 	broadcast(append([]byte{client.SCORE_MSG}, fmt.Sprintf("%v : %v", players[0].Score, players[1].Score)...))
 	if players[0].Score > 9 {
-		broadcast(append([]byte{client.SCORE_MSG}, "Player Left Won !"...))
 		closeChannel <- true
 	}
 	if players[1].Score > 9 {
-		broadcast(append([]byte{client.SCORE_MSG}, "Player Right Won !"...))
 		closeChannel <- true
 	}
 }

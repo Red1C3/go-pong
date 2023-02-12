@@ -138,9 +138,9 @@ func eventsHandler(dI game.CDrawInfo) int {
 		var err error
 		switch event.Key {
 		case 'u':
-			_, err = client.connection.Write([]byte{1})
+			_, err = client.connection.Write([]byte{DATA_MSG,1})
 		case 'd':
-			_, err = client.connection.Write([]byte{0})
+			_, err = client.connection.Write([]byte{DATA_MSG,0})
 		}
 		if err != nil {
 			log.Fatal("Failed to send direction byte to server, error:", err.Error())
