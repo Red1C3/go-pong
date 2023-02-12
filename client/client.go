@@ -42,12 +42,13 @@ type exchangeData struct {
 }
 
 const (
-	CLOSE_MSG = byte(0x0F)
-	READY_MSG = byte(0x1F)
-    CONNECT_MSG=byte(0x2F)
-    OTHER_DISCONNECT_MSG=byte(0x3F)
-    ID_MSG=byte(0x4F)
-    OTHER_CONNECT_MSG=byte(0x5F)
+	CLOSE_MSG            = byte(0x0F)
+	READY_MSG            = byte(0x1F)
+	CONNECT_MSG          = byte(0x2F)
+	OTHER_DISCONNECT_MSG = byte(0x3F)
+	ID_MSG               = byte(0x4F)
+	OTHER_CONNECT_MSG    = byte(0x5F)
+	DATA_MSG             = byte(0x6F)
 )
 
 var (
@@ -148,16 +149,16 @@ func eventsHandler(dI game.CDrawInfo) int {
 	case 1:
 		return 1
 	case 2:
-        var err error
+		var err error
 		switch event.Key {
-		  case 'u':
-              _,err=client.connection.Write([]byte{1})
-		  case 'd':
-              _,err=client.connection.Write([]byte{0})
-		  }
-        if err!=nil{
-            log.Fatal("Failed to send direction byte to server, error:",err.Error())
-        }
+		case 'u':
+			_, err = client.connection.Write([]byte{1})
+		case 'd':
+			_, err = client.connection.Write([]byte{0})
+		}
+		if err != nil {
+			log.Fatal("Failed to send direction byte to server, error:", err.Error())
+		}
 		return 2
 	default:
 		log.Fatalf("Unknown event code: %v", event.Code)
@@ -191,11 +192,11 @@ func msgsHandler() {
 			data.mutex.Unlock()
 			continue
 		}
-        
-        if string(b[:n])==CLOSE_MSG{
-            closeChannel<-true
-            return
-        }
+
+		if string(b[:n]) == CLOSE_MSG {
+			closeChannel <- true
+			return
+		}
 
 		fmt.Println(string(b[:n]))
 		if n == 5 {

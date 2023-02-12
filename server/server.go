@@ -62,7 +62,11 @@ func Start() {
 		log.Fatal("Failed to start listening error: ", err.Error())
 	}
 	waitForPlayers()
-	gameLobby.start()
+	broadcast([]byte{client.READY_MSG})
+	go listenToClient()
+	go listenToClient()
+	startGame()
+	broadcast([]byte{client.CLOSE_MSG})
 	err = udpServerHandle.Close()
 	if err != nil {
 		log.Print("Failed to close UDP server, error: ", err.Error())
@@ -72,39 +76,39 @@ func Start() {
 func waitForPlayers() {
 	var buffer [64]byte
 	log.Print("Waiting for players...")
-	for{
-        if len(gameLobby.clients)==2{
-            return
-        }
-        n,addr,err:=udpServerHandle.ReadFrom(buffer[:])
-        if err!=nil{
-            if addr!=nil{
-                log.Print("Failed to read from address:",addr.String(),", error:",err.Error())
-            }else{
-                log.Print("Failed to read, error:",err.Error())
-            }
-        }
-        if c,ok:=gameLobby.clients[addr.String()];ok{
-            if n==1 && buffer[0]==client.CLOSE_MSG{
-                delete(gameLobby.clients,addr.String())
-                fmt.Printf("A Player has disconnected with ID %v \n", c.ID)
-                broadcast([]byte{client.OTHER_DISCONNECT_MSG,c.ID})
-            }else{
-                log.Print("Client sent an unexpected message:",string(buffer[:n]))
-            }
-        }else if n==1 && buffer[0]==client.CONNECT_MSG{
-            newClient:=&clientStr{
-                ID:byte(len(gameLobby.clients)),
-                address: addr,
-            }
-            gameLobby.clients[addr.String()] = newClient
-            fmt.Printf("A Player has connected with ID %v \n", newClient.ID)
-            sendToAddress(c.address, []byte{client.ID_MSG,newClient.ID})
-            broadcast([]byte{client.OTHER_CONNECT_MSG,newClient.ID})
-        }else{
-            log.Print("Non-client sent an unexpected message, address:",addr.String()," messages:",string(buffer[:n]))
-        }
-    }
+	for {
+		if len(gameLobby.clients) == 2 {
+			return
+		}
+		n, addr, err := udpServerHandle.ReadFrom(buffer[:])
+		if err != nil {
+			if addr != nil {
+				log.Print("Failed to read from address:", addr.String(), ", error:", err.Error())
+			} else {
+				log.Print("Failed to read, error:", err.Error())
+			}
+		}
+		if c, ok := gameLobby.clients[addr.String()]; ok {
+			if n == 1 && buffer[0] == client.CLOSE_MSG {
+				delete(gameLobby.clients, addr.String())
+				fmt.Printf("A Player has disconnected with ID %v \n", c.ID)
+				broadcast([]byte{client.OTHER_DISCONNECT_MSG, c.ID})
+			} else {
+				log.Print("Client sent an unexpected message:", string(buffer[:n]))
+			}
+		} else if n == 1 && buffer[0] == client.CONNECT_MSG {
+			newClient := &clientStr{
+				ID:      byte(len(gameLobby.clients)),
+				address: addr,
+			}
+			gameLobby.clients[addr.String()] = newClient
+			fmt.Printf("A Player has connected with ID %v \n", newClient.ID)
+			sendToAddress(c.address, []byte{client.ID_MSG, newClient.ID})
+			broadcast([]byte{client.OTHER_CONNECT_MSG, newClient.ID})
+		} else {
+			log.Print("Non-client sent an unexpected message, address:", addr.String(), " messages:", string(buffer[:n]))
+		}
+	}
 }
 func broadcast(content []byte) {
 	for _, c := range gameLobby.clients {
@@ -131,10 +135,10 @@ func startGame() {
 	netTicker := time.NewTicker(time.Second / 120)
 	gameTicker := time.NewTicker(time.Second / 80)
 	deltaTime = ((time.Second) / 80).Seconds()
-	for close := false; !close; {
+	for cls := false; !cls; {
 		select {
 		case <-closeChannel:
-			close = true
+			cls = true
 		case <-netTicker.C:
 			playersMutex[0].RLock()
 			playersMutex[1].RLock()
@@ -153,7 +157,6 @@ func startGame() {
 			playersMutex[1].Unlock()
 		}
 	}
-	broadcast([]byte(client.CLOSE_MSG))
 }
 func broadcastData() {
 	var structure struct {
@@ -168,7 +171,7 @@ func broadcastData() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	broadcast(buffer.Bytes())
+	broadcast(append([]byte{client.DATA_MSG}, buffer.Bytes()...))
 }
 func reset(i float64) {
 	gameBall.Pos = [2]float64{i * 25, 0}
