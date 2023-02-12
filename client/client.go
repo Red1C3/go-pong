@@ -92,16 +92,17 @@ func Start() {
 	go listenToServer()
 	<-readyChannel
 	startGame()
-	closeConnection()
 	game.Terminate()
 }
-func closeConnection() {
+func closeConnection(sendCloseMsg bool) {
 	fmt.Println("Closing connection...")
-	_, err := client.connection.Write([]byte(CLOSE_MSG))
-	if err != nil {
-		log.Print("Failed to send closing message to server, error:", err.Error())
-	}
-	err = client.connection.Close()
+    if sendCloseMsg{
+        _, err := client.connection.Write([]byte(CLOSE_MSG))
+        if err != nil {
+            log.Print("Failed to send closing message to server, error:", err.Error())
+        }
+    }
+	err := client.connection.Close()
 	if err != nil {
 		log.Fatal("Failed to close connection to server")
 	}
@@ -111,14 +112,17 @@ func startGame() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for cls := false; !cls; {
+	for {
 		select {
 		case <-closeChannel:
-			cls = true
+            closeConnection(false)
+			return
 		default:
 		}
 		updateDrawInfo()
 		if eventsHandler(drawInfo) == 1 {
+            closeChannel<-true
+            closeConnection(true)
 			return
 		}
 	}
@@ -155,12 +159,19 @@ func listenToServer() {
 	var b [64]byte
 
 	for {
+        select{
+        case <-closeChannel:
+            return
+        default:
+        }
 		n, err := client.connection.Read(b[:])
 		if err != nil {
 			log.Print("Failed to read from server, error:", err.Error())
 		}
 		switch b[0] {
 		case CLOSE_MSG:
+            closeChannel<-true
+            return
 		case DATA_MSG:
 			buffer.Reset()
 			_, err = buffer.Write(b[1:])

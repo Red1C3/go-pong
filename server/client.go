@@ -47,6 +47,7 @@ func listenToClient() {
 		}
 		switch buffer[0] {
 		case client.CLOSE_MSG:
+            delete(gameLobby.clients,addr.String())
 			closeChannel <- true
 		case client.DATA_MSG:
 			var dir int
