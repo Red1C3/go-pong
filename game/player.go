@@ -1,6 +1,9 @@
 package game
 
+import "sync"
+
 type Player struct {
+	sync.RWMutex
 	Pos           [2]float64
 	length, width float64
 	Score         int

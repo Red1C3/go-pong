@@ -14,7 +14,7 @@ import (
 
 // structure used for server recieving
 type exchangeData struct {
-	mutex                sync.RWMutex
+	sync.RWMutex
 	P1, P2, BallX, BallY float64
 }
 
@@ -159,12 +159,12 @@ func listenToServer() {
 			if err != nil {
 				log.Print("Failed to decode data msg, error: ", err.Error())
 			}
-			data.mutex.Lock()
+			data.Lock()
 			data.P2 = structure.P2
 			data.P1 = structure.P1
 			data.BallX = structure.BallX
 			data.BallY = structure.BallY
-			data.mutex.Unlock()
+			data.Unlock()
 		case ID_MSG:
 			client.ID = int(b[1])
 		case OTHER_CONNECT_MSG:
@@ -189,8 +189,8 @@ func listenToServer() {
 	}
 }
 func updateDrawInfo() {
-	data.mutex.RLock()
-	defer data.mutex.RUnlock()
+	data.RLock()
+	defer data.RUnlock()
 	drawInfo.P1 = data.P1
 	drawInfo.P2 = data.P2
 	drawInfo.Ball[0] = data.BallX

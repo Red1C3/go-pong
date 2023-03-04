@@ -33,9 +33,9 @@ func listenToClient() {
 			} else {
 				dir = 1
 			}
-			playersMutex[gameLobby.clients[addr.String()].ID].Lock()
+			players[gameLobby.clients[addr.String()].ID].Lock()
 			players[gameLobby.clients[addr.String()].ID].Move(float64(dir)*30, deltaTime)
-			playersMutex[gameLobby.clients[addr.String()].ID].Unlock()
+			players[gameLobby.clients[addr.String()].ID].Unlock()
 		default:
 			log.Print("Unknown message type recieved from ", addr.String(), " message type:", buffer[0])
 		}

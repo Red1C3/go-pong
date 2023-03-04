@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -20,7 +19,6 @@ var (
 	udpServerHandle net.PacketConn
 	gameLobby       = newLobby()
 	players         [2]game.Player
-	playersMutex    [2]sync.RWMutex
 	gameBall        game.Ball
 	pauseTime       time.Time
 	savedVelocity   [2]float64
@@ -117,21 +115,21 @@ func startGame() {
 		case <-closeChannel:
 			cls = true
 		case <-netTicker.C:
-			playersMutex[0].RLock()
-			playersMutex[1].RLock()
+			players[0].RLock()
+			players[1].RLock()
 			broadcastData()
-			playersMutex[0].RUnlock()
-			playersMutex[1].RUnlock()
+			players[0].RUnlock()
+			players[1].RUnlock()
 		case <-gameTicker.C:
 			if gameBall.Velocity[0] == 0 && gameBall.Velocity[1] == 0 &&
 				time.Since(pauseTime).Seconds() > game.ResetTime {
 				gameBall.Velocity = savedVelocity
 			}
-			playersMutex[0].Lock()
-			playersMutex[1].Lock()
+			players[0].Lock()
+			players[1].Lock()
 			gameBall.Update(deltaTime, players[:], reset)
-			playersMutex[0].Unlock()
-			playersMutex[1].Unlock()
+			players[0].Unlock()
+			players[1].Unlock()
 		}
 	}
 }
